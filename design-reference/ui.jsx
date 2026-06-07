@@ -150,7 +150,7 @@ const isOverdue = (task) => task.due && task.status !== "done" && new Date(task.
 
 // ============ sidebar ============
 
-const Sidebar = ({ view, setView, clientFilter, setClientFilter, tagFilter, setTagFilter, tasks, inboxUnread, onQuickAdd, collapsed, me, onOpenProfile }) => {
+const Sidebar = ({ view, setView, clientFilter, setClientFilter, tagFilter, setTagFilter, tasks, inboxUnread, onQuickAdd, collapsed, me, onOpenProfile, onNewClient, onNewTag, onSavedView }) => {
   const countBy = (filter) => tasks.filter(filter).length;
   const navItems = [
     { id: "overview",  name: "Overview",      icon: "home" },
@@ -205,7 +205,7 @@ const Sidebar = ({ view, setView, clientFilter, setClientFilter, tagFilter, setT
       <div className="sidebar-section">
         <div className="sidebar-label">
           <span>Clients</span>
-          <button title="Manage"><Icon name="plus" size={14} /></button>
+          <button title="New client" onClick={onNewClient}><Icon name="plus" size={14} /></button>
         </div>
         {CLIENTS.map(c => {
           const ct = countBy(t => t.client === c.id && t.status !== "done");
@@ -228,7 +228,7 @@ const Sidebar = ({ view, setView, clientFilter, setClientFilter, tagFilter, setT
       <div className="sidebar-section">
         <div className="sidebar-label">
           <span>Tags</span>
-          <button title="Manage tags"><Icon name="plus" size={14} /></button>
+          <button title="New tag" onClick={onNewTag}><Icon name="plus" size={14} /></button>
         </div>
         <div style={{ display: "flex", flexWrap: "wrap", gap: 4, padding: "4px 10px 8px" }}>
           {TAGS.map(tg => (
@@ -246,7 +246,7 @@ const Sidebar = ({ view, setView, clientFilter, setClientFilter, tagFilter, setT
       <div className="sidebar-section">
         <div className="sidebar-label"><span>Saved Views</span></div>
         {SAVED_VIEWS.map(sv => (
-          <button key={sv.id} className="nav-item" style={{ fontSize: 12.5 }}>
+          <button key={sv.id} className="nav-item" style={{ fontSize: 12.5 }} onClick={() => onSavedView && onSavedView(sv)}>
             <Icon name={sv.icon} className="icon" size={14} />
             <span>{sv.name}</span>
           </button>
@@ -323,7 +323,7 @@ const FloatingTimer = ({ timer, onStop, onResume, onClear, tasks, onOpenTask }) 
       {timer.running ? (
         <button className="timer-btn pause" onClick={onStop} title="Pause"><Icon name="pause" size={14} /></button>
       ) : (
-        <button className="timer-btn" onClick={onResume} title="Start" disabled={!timer.taskId}><Icon name="play" size={14} /></button>
+        <button className="timer-btn" onClick={onResume} title={timer.taskId ? "Resume timer" : "Start a timer from any task"} disabled={!timer.taskId}><Icon name="play" size={14} /></button>
       )}
     </div>
   );
@@ -446,6 +446,7 @@ const TaskPanel = ({ taskId, tasks, onClose, onUpdate, onStartTimer, isTimingThi
   const [showTagPicker, setShowTagPicker] = React.useState(false);
   const [showClientPicker, setShowClientPicker] = React.useState(false);
   const [showPriorityPicker, setShowPriorityPicker] = React.useState(false);
+  const [showAssigneePicker, setShowAssigneePicker] = React.useState(false);
   const [editingSub, setEditingSub] = React.useState(null);
   const [confirmDelete, setConfirmDelete] = React.useState(false);
 
@@ -453,6 +454,7 @@ const TaskPanel = ({ taskId, tasks, onClose, onUpdate, onStartTimer, isTimingThi
   React.useEffect(() => {
     setShowMore(false); setShowTagPicker(false);
     setShowClientPicker(false); setShowPriorityPicker(false);
+    setShowAssigneePicker(false);
     setEditingSub(null); setConfirmDelete(false);
   }, [taskId]);
 
@@ -607,7 +609,31 @@ const TaskPanel = ({ taskId, tasks, onClose, onUpdate, onStartTimer, isTimingThi
             {/* Assignees */}
             <div className="tp-row">
               <span className="lbl">Assignees</span>
-              <div><AvatarStack users={task.assignees} max={4} size="sm" /></div>
+              <div style={{ position: "relative" }}>
+                <button data-popover-trigger className="field-edit" style={{ display:"flex", alignItems:"center", gap:6 }} onClick={() => setShowAssigneePicker(o => !o)}>
+                  <AvatarStack users={task.assignees} max={4} size="sm" />
+                  <Icon name="plus" size={12} style={{ color:"var(--muted)" }} />
+                </button>
+                {showAssigneePicker && (
+                  <div className="popover" style={{ top: 36, left: 0, minWidth: 180 }}>
+                    {ALL_USERS.map(u => {
+                      const assigned = task.assignees.includes(u.id);
+                      return (
+                        <button key={u.id} className="popover-item" onClick={() => {
+                          const next = assigned
+                            ? task.assignees.filter(id => id !== u.id)
+                            : [...task.assignees, u.id];
+                          update({ assignees: next.length > 0 ? next : task.assignees });
+                        }}>
+                          <Avatar user={u} size="sm" />
+                          <span style={{ flex:1 }}>{u.name}</span>
+                          {assigned && <Icon name="check" size={12} stroke={2.5} style={{ color:"var(--accent)" }} />}
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
             </div>
 
             {/* Due date — editable */}
@@ -863,9 +889,128 @@ const ToastZone = ({ toasts }) => (
   </div>
 );
 
+// ============ color presets (shared by client + tag modals) ============
+const COLOR_PRESETS = [
+  "#0ea5e9","#6366f1","#10b981","#f59e0b","#ef4444","#a855f7",
+  "#84cc16","#ec4899","#06b6d4","#f43f5e","#475569","#e11d48",
+];
+
+// ============ client modal ============
+const ClientModal = ({ onClose, onCreate }) => {
+  const [name, setName] = React.useState("");
+  const [color, setColor] = React.useState("#0ea5e9");
+  const [rate, setRate] = React.useState(150);
+  const [retainer, setRetainer] = React.useState(0);
+  const [brief, setBrief] = React.useState("");
+  const initials = name.trim().split(/\s+/).filter(Boolean).map(w => w[0]).join("").toUpperCase().slice(0, 2) || "?";
+
+  React.useEffect(() => {
+    const fn = e => { if (e.key === "Escape") onClose(); };
+    window.addEventListener("keydown", fn);
+    return () => window.removeEventListener("keydown", fn);
+  }, [onClose]);
+
+  const submit = () => {
+    if (!name.trim()) return;
+    onCreate({ name: name.trim(), color, initials, rate: Number(rate) || 0, retainer: Number(retainer) || 0, brief });
+    onClose();
+  };
+
+  return (
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal-card" style={{ width: 420 }} onClick={e => e.stopPropagation()}>
+        <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:16 }}>
+          <div style={{ fontWeight:600, fontSize:15 }}>New client</div>
+          <button className="btn-ghost" style={{ padding:4 }} onClick={onClose}><Icon name="x" size={16} /></button>
+        </div>
+        <div style={{ display:"flex", alignItems:"center", gap:12, marginBottom:14 }}>
+          <div style={{ width:40, height:40, borderRadius:"var(--radius)", background:color, display:"flex", alignItems:"center", justifyContent:"center", color:"#fff", fontWeight:700, fontSize:15, flexShrink:0 }}>{initials}</div>
+          <input className="field-edit" style={{ flex:1, fontSize:14 }} placeholder="Client name" value={name} onChange={e => setName(e.target.value)} autoFocus onKeyDown={e => e.key === "Enter" && submit()} />
+        </div>
+        <div style={{ marginBottom:12 }}>
+          <div style={{ fontSize:12, fontWeight:500, color:"var(--text-2)", marginBottom:6 }}>Colour</div>
+          <div style={{ display:"flex", flexWrap:"wrap", gap:6 }}>
+            {COLOR_PRESETS.map(c => (
+              <button key={c} onClick={() => setColor(c)} title={c}
+                style={{ width:22, height:22, borderRadius:"50%", background:c, border: color === c ? "3px solid var(--text)" : "3px solid transparent", cursor:"pointer" }} />
+            ))}
+          </div>
+        </div>
+        <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10, marginBottom:12 }}>
+          <div>
+            <div style={{ fontSize:12, fontWeight:500, color:"var(--text-2)", marginBottom:4 }}>Hourly rate ($)</div>
+            <input type="number" className="field-edit" style={{ width:"100%" }} value={rate} onChange={e => setRate(e.target.value)} min="0" />
+          </div>
+          <div>
+            <div style={{ fontSize:12, fontWeight:500, color:"var(--text-2)", marginBottom:4 }}>Monthly retainer ($)</div>
+            <input type="number" className="field-edit" style={{ width:"100%" }} value={retainer} onChange={e => setRetainer(e.target.value)} min="0" />
+          </div>
+        </div>
+        <div style={{ marginBottom:16 }}>
+          <div style={{ fontSize:12, fontWeight:500, color:"var(--text-2)", marginBottom:4 }}>Brief</div>
+          <textarea className="panel-desc" placeholder="Short description of this engagement" value={brief} onChange={e => setBrief(e.target.value)} style={{ width:"100%", minHeight:52, fontSize:13, resize:"vertical" }} />
+        </div>
+        <div style={{ display:"flex", gap:8, justifyContent:"flex-end" }}>
+          <button className="btn btn-ghost" onClick={onClose}>Cancel</button>
+          <button className="btn btn-primary" onClick={submit} disabled={!name.trim()}>Create client</button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// ============ tag modal ============
+const TagModal = ({ onClose, onCreate }) => {
+  const [name, setName] = React.useState("");
+  const [color, setColor] = React.useState("#6366f1");
+
+  React.useEffect(() => {
+    const fn = e => { if (e.key === "Escape") onClose(); };
+    window.addEventListener("keydown", fn);
+    return () => window.removeEventListener("keydown", fn);
+  }, [onClose]);
+
+  const submit = () => {
+    if (!name.trim()) return;
+    onCreate({ name: name.trim(), color });
+    onClose();
+  };
+
+  return (
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal-card" style={{ width: 340 }} onClick={e => e.stopPropagation()}>
+        <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:16 }}>
+          <div style={{ fontWeight:600, fontSize:15 }}>New tag</div>
+          <button className="btn-ghost" style={{ padding:4 }} onClick={onClose}><Icon name="x" size={16} /></button>
+        </div>
+        <div style={{ display:"flex", alignItems:"center", gap:10, marginBottom:12 }}>
+          <span className="tag" style={{ background: color + "22", color }}>
+            <span className="dot" style={{ background: color }} />
+            {name || "Preview"}
+          </span>
+          <input className="field-edit" style={{ flex:1, fontSize:14 }} placeholder="Tag name" value={name} onChange={e => setName(e.target.value)} autoFocus onKeyDown={e => e.key === "Enter" && submit()} />
+        </div>
+        <div style={{ marginBottom:16 }}>
+          <div style={{ fontSize:12, fontWeight:500, color:"var(--text-2)", marginBottom:6 }}>Colour</div>
+          <div style={{ display:"flex", flexWrap:"wrap", gap:6 }}>
+            {COLOR_PRESETS.map(c => (
+              <button key={c} onClick={() => setColor(c)} title={c}
+                style={{ width:22, height:22, borderRadius:"50%", background:c, border: color === c ? "3px solid var(--text)" : "3px solid transparent", cursor:"pointer" }} />
+            ))}
+          </div>
+        </div>
+        <div style={{ display:"flex", gap:8, justifyContent:"flex-end" }}>
+          <button className="btn btn-ghost" onClick={onClose}>Cancel</button>
+          <button className="btn btn-primary" onClick={submit} disabled={!name.trim()}>Create tag</button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 // ============ quick add ============
 
-const QuickAdd = ({ open, onClose, onCreate }) => {
+const QuickAdd = ({ open, onClose, onCreate, defaultStatus = "todo" }) => {
   const [title, setTitle] = React.useState("");
   const [client, setClient] = React.useState(null);
   const [priority, setPriority] = React.useState("p3");
@@ -884,7 +1029,7 @@ const QuickAdd = ({ open, onClose, onCreate }) => {
 
   const submit = () => {
     if (!title.trim()) return;
-    onCreate({ title: title.trim(), client, priority, due, tags, status: "todo" });
+    onCreate({ title: title.trim(), client, priority, due, tags, status: defaultStatus });
     onClose();
   };
 

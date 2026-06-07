@@ -207,10 +207,10 @@ const INBOX = [
 
 // Saved views
 const SAVED_VIEWS = [
-  { id: "sv1", name: "Due this week",    icon: "calendar" },
-  { id: "sv2", name: "P1 across clients", icon: "flame" },
-  { id: "sv3", name: "Blocked",           icon: "lock" },
-  { id: "sv4", name: "Billing & admin",   icon: "receipt" },
+  { id: "sv1", name: "Due this week",     icon: "calendar", filter: { dueSoon: true } },
+  { id: "sv2", name: "P1 across clients", icon: "flame",    filter: { priority: "p1" } },
+  { id: "sv3", name: "Blocked",           icon: "lock",     filter: { status: "blocked" } },
+  { id: "sv4", name: "Billing & admin",   icon: "receipt",  filter: { tag: "t-billing" } },
 ];
 
 const TEMPLATES = [

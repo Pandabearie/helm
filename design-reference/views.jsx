@@ -261,7 +261,7 @@ const ListView = ({ tasks, onOpenTask, onStartTimer, onToggleDone, groupBy }) =>
 };
 
 // ---------- Kanban ----------
-const KanbanView = ({ tasks, onOpenTask, onMoveTask, onStartTimer }) => {
+const KanbanView = ({ tasks, onOpenTask, onMoveTask, onStartTimer, onQuickAdd }) => {
   const [dragId, setDragId] = React.useState(null);
   const [overCol, setOverCol] = React.useState(null);
 
@@ -278,7 +278,7 @@ const KanbanView = ({ tasks, onOpenTask, onMoveTask, onStartTimer }) => {
             <span>{s.name}</span>
             <span className="count">{byStatus[s.id].length}</span>
             <div style={{ flex: 1 }} />
-            <button className="btn-ghost btn-icon" style={{ width: 22, height: 22 }}><Icon name="plus" size={12} /></button>
+            <button className="btn-ghost btn-icon" style={{ width: 22, height: 22 }} title={`Add task to ${s.name}`} onClick={() => onQuickAdd && onQuickAdd(s.id)}><Icon name="plus" size={12} /></button>
           </div>
           <div
             className={`kb-col-body ${overCol === s.id ? "over" : ""}`}

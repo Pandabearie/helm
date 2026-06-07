@@ -73,6 +73,9 @@ const App = () => {
   const [inbox, setInbox] = React.useState(seed.inbox);
   const [templates, setTemplates] = React.useState(seed.templates);
   const [openTemplateId, setOpenTemplateId] = React.useState(null);
+  // clientsVer / tagsVer: increment to force re-render after mutating the CLIENTS/TAGS globals
+  const [clientsVer, setClientsVer] = React.useState(0);
+  const [tagsVer, setTagsVer] = React.useState(0);
 
   // Fetch persisted data from server on first mount
   React.useEffect(() => {
@@ -84,13 +87,21 @@ const App = () => {
         if (data.timeEntries) setTimeEntries(data.timeEntries);
         if (data.inbox) setInbox(data.inbox);
         if (data.templates) setTemplates(data.templates);
+        // Hydrate global CLIENTS/TAGS arrays from persisted data
+        if (data.clients && data.clients.length) { CLIENTS.length = 0; CLIENTS.push(...data.clients); setClientsVer(v => v + 1); }
+        if (data.tags && data.tags.length) { TAGS.length = 0; TAGS.push(...data.tags); setTagsVer(v => v + 1); }
       })
       .catch((e) => console.warn("Helm: could not load data from server, using seed.", e));
   }, []);
+
   const [openTaskId, setOpenTaskId] = React.useState(null);
   const [cmdkOpen, setCmdkOpen] = React.useState(false);
   const [quickAddOpen, setQuickAddOpen] = React.useState(false);
+  const [quickAddStatus, setQuickAddStatus] = React.useState("todo");
   const [profileOpen, setProfileOpen] = React.useState(false);
+  const [clientModalOpen, setClientModalOpen] = React.useState(false);
+  const [tagModalOpen, setTagModalOpen] = React.useState(false);
+  const [savedView, setSavedView] = React.useState(null);
   const [clientFilter, setClientFilter] = React.useState(null);
   const [tagFilter, setTagFilter] = React.useState(null);
   const [focusedClient, setFocusedClient] = React.useState(null);
@@ -112,14 +123,14 @@ const App = () => {
   React.useEffect(() => {
     if (saveTimer.current) clearTimeout(saveTimer.current);
     saveTimer.current = setTimeout(() => {
-      saveStore({ profile, tasks, timeEntries, inbox, templates, meta: { version: 1 } });
+      saveStore({ profile, tasks, timeEntries, inbox, templates, clients: [...CLIENTS], tags: [...TAGS], meta: { version: 1 } });
     }, 400);
     return () => clearTimeout(saveTimer.current);
   }, [profile, tasks, timeEntries, inbox, templates]);
 
   // Flush on tab close
   React.useEffect(() => {
-    const flush = () => saveStore({ profile, tasks, timeEntries, inbox, templates, meta: { version: 1 } });
+    const flush = () => saveStore({ profile, tasks, timeEntries, inbox, templates, clients: [...CLIENTS], tags: [...TAGS], meta: { version: 1 } });
     window.addEventListener("beforeunload", flush);
     return () => window.removeEventListener("beforeunload", flush);
   }, [profile, tasks, timeEntries, inbox, templates]);
@@ -132,10 +143,20 @@ const App = () => {
     return tasks.filter(t => {
       if (clientFilter && t.client !== clientFilter) return false;
       if (tagFilter && !t.tags.includes(tagFilter)) return false;
+      if (savedView) {
+        if (savedView.filter.status && t.status !== savedView.filter.status) return false;
+        if (savedView.filter.priority && t.priority !== savedView.filter.priority) return false;
+        if (savedView.filter.tag && !t.tags.includes(savedView.filter.tag)) return false;
+        if (savedView.filter.dueSoon) {
+          const due = t.due ? new Date(t.due) : null;
+          const cutoff = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+          if (!due || due > cutoff || t.status === "done") return false;
+        }
+      }
       if (search && !t.title.toLowerCase().includes(search.toLowerCase())) return false;
       return true;
     });
-  }, [tasks, clientFilter, tagFilter, search]);
+  }, [tasks, clientFilter, tagFilter, savedView, search]);
 
   // Handlers
   const openTask = (id) => setOpenTaskId(id);
@@ -189,6 +210,41 @@ const App = () => {
     pushToast("Profile updated", { icon: "check" });
   };
 
+  // Client handlers (mutate global CLIENTS array + bump version to trigger re-render)
+  const createClient = (data) => {
+    const newClient = { id: `c-${Date.now()}`, ...data };
+    CLIENTS.push(newClient);
+    setClientsVer(v => v + 1);
+    pushToast(`Client "${newClient.name}" created`, { icon: "plus" });
+  };
+  const deleteClient = (id) => {
+    const idx = CLIENTS.findIndex(c => c.id === id);
+    if (idx !== -1) CLIENTS.splice(idx, 1);
+    setClientsVer(v => v + 1);
+  };
+
+  // Tag handlers
+  const createTag = (data) => {
+    const newTag = { id: `t-custom-${Date.now()}`, ...data };
+    TAGS.push(newTag);
+    setTagsVer(v => v + 1);
+    pushToast(`Tag "${newTag.name}" created`, { icon: "plus" });
+  };
+  const deleteTag = (id) => {
+    const idx = TAGS.findIndex(t => t.id === id);
+    if (idx !== -1) TAGS.splice(idx, 1);
+    setTagsVer(v => v + 1);
+  };
+
+  // Saved view handler
+  const handleSavedView = (sv) => {
+    setSavedView(sv);
+    setClientFilter(null);
+    setTagFilter(null);
+    setView("list");
+    pushToast(`Showing: ${sv.name}`, { icon: sv.icon });
+  };
+
   // Template handlers
   const createTemplate = () => {
     const id = `tpl-${Date.now()}`;
@@ -237,20 +293,19 @@ const App = () => {
     if (timer.running && timer.taskId === taskId) return;
     // commit previous time first if changing tasks
     if (timer.running && timer.taskId && timer.taskId !== taskId) {
-      stopTimer(true);
+      stopTimer();
     }
     setTimer({ taskId, running: true, startedAt: Date.now(), accumulated: timer.taskId === taskId ? timer.accumulated : 0 });
   };
-  const stopTimer = (silent = false) => {
+  const stopTimer = () => {
     setTimer(t => {
       if (!t.running) return t;
       const elapsed = Math.floor((Date.now() - t.startedAt) / 1000) + t.accumulated;
-      // commit minutes to task
       if (t.taskId) {
         const mins = Math.max(1, Math.round(elapsed / 60));
         setTasks(ts => ts.map(x => x.id === t.taskId ? { ...x, logged: x.logged + mins } : x));
         const task = tasks.find(x => x.id === t.taskId);
-        if (task && !silent) {
+        if (task) {
           setTimeEntries(es => [{ id: `e-new-${Date.now()}`, task: t.taskId, client: task.client, duration: mins, date: new Date(), note: "Tracked session" }, ...es]);
         }
       }
@@ -292,7 +347,7 @@ const App = () => {
       case "mytasks":   return <MyTasksView {...baseProps} onToggleDone={toggleDone} />;
       case "inbox":     return <InboxView inbox={inbox} tasks={tasks} onOpenTask={openTask} onMarkRead={markRead} onMarkAllRead={markAllRead} />;
       case "list":      return <ListView {...baseProps} onToggleDone={toggleDone} groupBy={listGroupBy} />;
-      case "kanban":    return <KanbanView {...baseProps} onMoveTask={moveTask} />;
+      case "kanban":    return <KanbanView {...baseProps} onMoveTask={moveTask} onQuickAdd={(status) => { setQuickAddStatus(status); setQuickAddOpen(true); }} />;
       case "calendar":  return <CalendarView tasks={filteredTasks} onOpenTask={openTask} />;
       case "timeline":  return <TimelineView tasks={filteredTasks} onOpenTask={openTask} />;
       case "clients":   return <ClientsView {...baseProps} timeEntries={timeEntries} focusedClient={focusedClient || clientFilter} setFocusedClient={(id) => { setFocusedClient(id); if (!id) setClientFilter(null); }} />;
@@ -340,7 +395,7 @@ const App = () => {
 
   // active filter chips bar (above main content for most views)
   const filterBar = (
-    (clientFilter || tagFilter) && view !== "clients" ? (
+    (clientFilter || tagFilter || savedView) && view !== "clients" ? (
       <div className="filter-bar">
         <Icon name="filter" size={14} className="muted" />
         <span className="text-xs muted">Filtered by:</span>
@@ -357,7 +412,14 @@ const App = () => {
             <Icon name="x" size={12} className="x" />
           </button>
         )}
-        <button className="btn btn-ghost btn-sm" onClick={() => { setClientFilter(null); setTagFilter(null); }} style={{ marginLeft: 4 }}>Clear all</button>
+        {savedView && (
+          <button className="filter-chip" data-active onClick={() => setSavedView(null)}>
+            <Icon name={savedView.icon} size={12} />
+            {savedView.name}
+            <Icon name="x" size={12} className="x" />
+          </button>
+        )}
+        <button className="btn btn-ghost btn-sm" onClick={() => { setClientFilter(null); setTagFilter(null); setSavedView(null); }} style={{ marginLeft: 4 }}>Clear all</button>
       </div>
     ) : null
   );
@@ -366,15 +428,18 @@ const App = () => {
     <div className="app" data-collapsed={sidebarCollapsed}>
       <Sidebar
         view={view}
-        setView={(v) => { setView(v); if (v !== "clients") setFocusedClient(null); }}
+        setView={(v) => { setView(v); if (v !== "clients") setFocusedClient(null); setSavedView(null); }}
         clientFilter={clientFilter} setClientFilter={setClientFilter}
         tagFilter={tagFilter} setTagFilter={setTagFilter}
         tasks={tasks}
         inboxUnread={inboxUnread}
-        onQuickAdd={() => setQuickAddOpen(true)}
+        onQuickAdd={() => { setQuickAddStatus("todo"); setQuickAddOpen(true); }}
         collapsed={sidebarCollapsed}
         me={profile}
         onOpenProfile={() => setProfileOpen(true)}
+        onNewClient={() => setClientModalOpen(true)}
+        onNewTag={() => setTagModalOpen(true)}
+        onSavedView={handleSavedView}
       />
       <div className="main">
         <Topbar
@@ -423,9 +488,13 @@ const App = () => {
 
       <QuickAdd
         open={quickAddOpen}
-        onClose={() => setQuickAddOpen(false)}
+        onClose={() => { setQuickAddOpen(false); setQuickAddStatus("todo"); }}
         onCreate={createTask}
+        defaultStatus={quickAddStatus}
       />
+
+      {clientModalOpen && <ClientModal onClose={() => setClientModalOpen(false)} onCreate={createClient} />}
+      {tagModalOpen && <TagModal onClose={() => setTagModalOpen(false)} onCreate={createTag} />}
 
       <ProfileModal
         open={profileOpen}
