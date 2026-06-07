@@ -983,6 +983,69 @@ const ToastZone = ({ toasts }) => (
   </div>
 );
 
+// ============ FilterDropdown ============
+const FilterDropdown = ({ clientFilter, setClientFilter, tagFilter, setTagFilter, statusFilter, setStatusFilter, priorityFilter, setPriorityFilter, onClose, onClearAll }) => {
+  const ref = React.useRef(null);
+  React.useEffect(() => {
+    const fn = e => { if (ref.current && !ref.current.contains(e.target)) onClose(); };
+    document.addEventListener("mousedown", fn);
+    return () => document.removeEventListener("mousedown", fn);
+  }, [onClose]);
+
+  const Section = ({ label, children }) => (
+    <div style={{ marginBottom: 12 }}>
+      <div style={{ fontSize: 11, fontWeight: 600, color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 6 }}>{label}</div>
+      {children}
+    </div>
+  );
+  const Chip = ({ active, onClick, children }) => (
+    <button onClick={onClick} style={{ padding: "3px 10px", borderRadius: 99, fontSize: 12, fontWeight: 500, cursor: "pointer", border: "none", background: active ? "var(--accent)" : "var(--surface-3)", color: active ? "#fff" : "var(--text-2)" }}>{children}</button>
+  );
+  const activeCount = [clientFilter, tagFilter, statusFilter, priorityFilter].filter(Boolean).length;
+
+  return (
+    <div ref={ref} className="popover" style={{ top: "calc(100% + 6px)", right: 0, width: 276, zIndex: 300, padding: "14px 14px 10px" }}>
+      <Section label="Status">
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 5 }}>
+          {STATUSES.map(s => (
+            <Chip key={s.id} active={statusFilter === s.id} onClick={() => { setStatusFilter(statusFilter === s.id ? null : s.id); onClose(); }}>{s.name}</Chip>
+          ))}
+        </div>
+      </Section>
+      <Section label="Priority">
+        <div style={{ display: "flex", gap: 5 }}>
+          {PRIORITIES.map(p => (
+            <Chip key={p.id} active={priorityFilter === p.id} onClick={() => { setPriorityFilter(priorityFilter === p.id ? null : p.id); onClose(); }}>{p.name}</Chip>
+          ))}
+        </div>
+      </Section>
+      <Section label="Client">
+        <div style={{ display: "flex", flexDirection: "column", gap: 1 }}>
+          {CLIENTS.map(c => (
+            <button key={c.id} onClick={() => { setClientFilter(clientFilter === c.id ? null : c.id); onClose(); }}
+              style={{ display: "flex", alignItems: "center", gap: 8, padding: "4px 6px", borderRadius: "var(--radius-sm)", fontSize: 12.5, cursor: "pointer", border: "none", textAlign: "left", background: clientFilter === c.id ? "var(--accent-soft)" : "transparent", color: clientFilter === c.id ? "var(--accent)" : "var(--text)" }}>
+              <span style={{ width: 8, height: 8, borderRadius: 2, background: c.color, flexShrink: 0 }} />
+              {c.name}
+            </button>
+          ))}
+        </div>
+      </Section>
+      <Section label="Tag">
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 5 }}>
+          {TAGS.map(t => (
+            <Chip key={t.id} active={tagFilter === t.id} onClick={() => { setTagFilter(tagFilter === t.id ? null : t.id); onClose(); }}>{t.name}</Chip>
+          ))}
+        </div>
+      </Section>
+      {activeCount > 0 && (
+        <div style={{ borderTop: "1px solid var(--border)", paddingTop: 8, marginTop: 2 }}>
+          <button className="btn btn-ghost btn-sm" style={{ width: "100%", justifyContent: "center", color: "var(--p1)" }} onClick={onClearAll}>Clear all filters ({activeCount})</button>
+        </div>
+      )}
+    </div>
+  );
+};
+
 // ============ color presets (shared by client + tag modals) ============
 const COLOR_PRESETS = [
   "#0ea5e9","#6366f1","#10b981","#f59e0b","#ef4444","#a855f7",
@@ -1021,28 +1084,27 @@ const ClientModal = ({ onClose, onCreate }) => {
           <div style={{ width:40, height:40, borderRadius:"var(--radius)", background:color, display:"flex", alignItems:"center", justifyContent:"center", color:"#fff", fontWeight:700, fontSize:15, flexShrink:0 }}>{initials}</div>
           <input className="field-edit" style={{ flex:1, fontSize:14 }} placeholder="Client name" value={name} onChange={e => setName(e.target.value)} autoFocus onKeyDown={e => e.key === "Enter" && submit()} />
         </div>
-        <div style={{ marginBottom:12 }}>
-          <div style={{ fontSize:12, fontWeight:500, color:"var(--text-2)", marginBottom:6 }}>Colour</div>
-          <div style={{ display:"flex", flexWrap:"wrap", gap:6 }}>
+        <div style={{ background:"var(--surface-2)", borderRadius:"var(--radius)", padding:"10px 12px", marginBottom:12 }}>
+          <div style={{ fontSize:11, fontWeight:600, color:"var(--muted)", textTransform:"uppercase", letterSpacing:"0.06em", marginBottom:8 }}>Colour</div>
+          <div style={{ display:"flex", flexWrap:"wrap", gap:7 }}>
             {COLOR_PRESETS.map(c => (
-              <button key={c} onClick={() => setColor(c)} title={c}
-                style={{ width:22, height:22, borderRadius:"50%", background:c, border: color === c ? "3px solid var(--text)" : "3px solid transparent", cursor:"pointer" }} />
+              <button key={c} onClick={() => setColor(c)} title={c} style={{ width:28, height:28, borderRadius:"50%", background:c, border:"none", cursor:"pointer", outline: color === c ? `3px solid ${c}` : "3px solid transparent", outlineOffset:2, boxShadow: color === c ? "0 0 0 1px var(--border)" : "none" }} />
             ))}
           </div>
         </div>
         <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10, marginBottom:12 }}>
           <div>
-            <div style={{ fontSize:12, fontWeight:500, color:"var(--text-2)", marginBottom:4 }}>Hourly rate ($)</div>
+            <div style={{ fontSize:11, fontWeight:600, color:"var(--muted)", textTransform:"uppercase", letterSpacing:"0.06em", marginBottom:4 }}>Hourly rate ($)</div>
             <input type="number" className="field-edit" style={{ width:"100%" }} value={rate} onChange={e => setRate(e.target.value)} min="0" />
           </div>
           <div>
-            <div style={{ fontSize:12, fontWeight:500, color:"var(--text-2)", marginBottom:4 }}>Monthly retainer ($)</div>
+            <div style={{ fontSize:11, fontWeight:600, color:"var(--muted)", textTransform:"uppercase", letterSpacing:"0.06em", marginBottom:4 }}>Monthly retainer ($)</div>
             <input type="number" className="field-edit" style={{ width:"100%" }} value={retainer} onChange={e => setRetainer(e.target.value)} min="0" />
           </div>
         </div>
         <div style={{ marginBottom:16 }}>
-          <div style={{ fontSize:12, fontWeight:500, color:"var(--text-2)", marginBottom:4 }}>Brief</div>
-          <textarea className="panel-desc" placeholder="Short description of this engagement" value={brief} onChange={e => setBrief(e.target.value)} style={{ width:"100%", minHeight:52, fontSize:13, resize:"vertical" }} />
+          <div style={{ fontSize:11, fontWeight:600, color:"var(--muted)", textTransform:"uppercase", letterSpacing:"0.06em", marginBottom:4 }}>Brief</div>
+          <textarea className="panel-desc" placeholder="Short description of this engagement" value={brief} onChange={e => setBrief(e.target.value)} style={{ width:"100%", minHeight:56, fontSize:13, resize:"vertical" }} />
         </div>
         <div style={{ display:"flex", gap:8, justifyContent:"flex-end" }}>
           <button className="btn btn-ghost" onClick={onClose}>Cancel</button>
@@ -1084,12 +1146,12 @@ const TagModal = ({ onClose, onCreate }) => {
           </span>
           <input className="field-edit" style={{ flex:1, fontSize:14 }} placeholder="Tag name" value={name} onChange={e => setName(e.target.value)} autoFocus onKeyDown={e => e.key === "Enter" && submit()} />
         </div>
-        <div style={{ marginBottom:16 }}>
-          <div style={{ fontSize:12, fontWeight:500, color:"var(--text-2)", marginBottom:6 }}>Colour</div>
-          <div style={{ display:"flex", flexWrap:"wrap", gap:6 }}>
+        <div style={{ background:"var(--surface-2)", borderRadius:"var(--radius)", padding:"10px 12px", marginBottom:16 }}>
+          <div style={{ fontSize:11, fontWeight:600, color:"var(--muted)", textTransform:"uppercase", letterSpacing:"0.06em", marginBottom:8 }}>Colour</div>
+          <div style={{ display:"flex", flexWrap:"wrap", gap:7 }}>
             {COLOR_PRESETS.map(c => (
               <button key={c} onClick={() => setColor(c)} title={c}
-                style={{ width:22, height:22, borderRadius:"50%", background:c, border: color === c ? "3px solid var(--text)" : "3px solid transparent", cursor:"pointer" }} />
+                style={{ width:28, height:28, borderRadius:"50%", background:c, border:"none", cursor:"pointer", outline: color === c ? `3px solid ${c}` : "3px solid transparent", outlineOffset:2, boxShadow: color === c ? "0 0 0 1px var(--border)" : "none" }} />
             ))}
           </div>
         </div>

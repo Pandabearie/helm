@@ -298,10 +298,11 @@ const TemplatePanel = ({ templateId, templates, onClose, onUpdate, onDelete, onU
 };
 
 // ---- TemplatesView ----
-const TemplatesView = ({ templates, onOpenTemplate, onCreate }) => {
+const TemplatesView = ({ templates, onOpenTemplate, onCreate, onDelete, onUse }) => {
+  const [useModalTpl, setUseModalTpl] = React.useState(null);
+
   return (
     <div style={{ padding: "28px 32px", maxWidth: 960 }}>
-      {/* Page header */}
       <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 28 }}>
         <div>
           <h1 style={{ fontSize: 22, fontWeight: 600, margin: 0 }}>Project Templates</h1>
@@ -329,48 +330,88 @@ const TemplatesView = ({ templates, onOpenTemplate, onCreate }) => {
 
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 14 }}>
         {templates.map(tpl => (
-          <button
+          <div
             key={tpl.id}
-            onClick={() => onOpenTemplate(tpl.id)}
             style={{
-              textAlign: "left",
               background: "var(--surface)",
               border: "1px solid var(--border)",
               borderRadius: "var(--radius-lg)",
               padding: "16px 18px",
-              cursor: "pointer",
+              display: "flex",
+              flexDirection: "column",
               transition: "box-shadow 0.12s, border-color 0.12s",
             }}
             onMouseEnter={e => { e.currentTarget.style.boxShadow = "var(--shadow-md)"; e.currentTarget.style.borderColor = "var(--accent)"; }}
             onMouseLeave={e => { e.currentTarget.style.boxShadow = "none"; e.currentTarget.style.borderColor = "var(--border)"; }}
           >
-            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
-              <div style={{ width: 30, height: 30, borderRadius: "var(--radius-sm)", background: "var(--accent-soft)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                <Icon name="layers" size={15} style={{ color: "var(--accent)" }} />
+            {/* Card header — click to edit */}
+            <button
+              onClick={() => onOpenTemplate(tpl.id)}
+              style={{ textAlign: "left", background: "none", border: "none", padding: 0, cursor: "pointer", flex: 1 }}
+            >
+              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
+                <div style={{ width: 30, height: 30, borderRadius: "var(--radius-sm)", background: "var(--accent-soft)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                  <Icon name="layers" size={15} style={{ color: "var(--accent)" }} />
+                </div>
+                <span style={{ fontWeight: 600, fontSize: 14, color: "var(--text)" }}>{tpl.name}</span>
               </div>
-              <span style={{ fontWeight: 600, fontSize: 14, color: "var(--text)" }}>{tpl.name}</span>
-            </div>
-            {tpl.description && (
-              <p className="muted" style={{ fontSize: 12.5, margin: "0 0 10px", lineHeight: 1.45, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
-                {tpl.description}
-              </p>
-            )}
-            <div style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 8 }}>
-              <span style={{ fontSize: 12, color: "var(--muted)", display: "flex", alignItems: "center", gap: 4 }}>
-                <Icon name="list" size={12} />
-                {tpl.tasks.length} task{tpl.tasks.length !== 1 ? "s" : ""}
-              </span>
-              {tpl.tasks.some(t => t.subtasks?.length > 0) && (
-                <span style={{ fontSize: 12, color: "var(--muted)", display: "flex", alignItems: "center", gap: 4 }}>
-                  <Icon name="chev-right" size={12} />
-                  {tpl.tasks.reduce((a, t) => a + (t.subtasks?.length || 0), 0)} subtasks
-                </span>
+              {tpl.description && (
+                <p className="muted" style={{ fontSize: 12.5, margin: "0 0 8px", lineHeight: 1.45, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
+                  {tpl.description}
+                </p>
               )}
-              <span style={{ marginLeft: "auto", fontSize: 11.5, color: "var(--accent)", fontWeight: 500 }}>Open →</span>
+              <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
+                <span style={{ fontSize: 12, color: "var(--muted)", display: "flex", alignItems: "center", gap: 4 }}>
+                  <Icon name="list" size={12} />
+                  {tpl.tasks.length} task{tpl.tasks.length !== 1 ? "s" : ""}
+                </span>
+                {tpl.tasks.some(t => t.subtasks?.length > 0) && (
+                  <span style={{ fontSize: 12, color: "var(--muted)", display: "flex", alignItems: "center", gap: 4 }}>
+                    <Icon name="chev-right" size={12} />
+                    {tpl.tasks.reduce((a, t) => a + (t.subtasks?.length || 0), 0)} subtasks
+                  </span>
+                )}
+              </div>
+            </button>
+
+            {/* Action row */}
+            <div style={{ display: "flex", gap: 6, borderTop: "1px solid var(--border)", paddingTop: 10 }}>
+              <button
+                className="btn btn-ghost btn-sm"
+                style={{ flex: 1, justifyContent: "center", fontSize: 12 }}
+                onClick={() => onOpenTemplate(tpl.id)}
+              >
+                Edit
+              </button>
+              <button
+                className="btn btn-primary btn-sm"
+                style={{ flex: 1, justifyContent: "center", fontSize: 12 }}
+                disabled={tpl.tasks.length === 0}
+                title={tpl.tasks.length === 0 ? "Add tasks first" : `Create ${tpl.tasks.length} tasks from this template`}
+                onClick={() => setUseModalTpl(tpl)}
+              >
+                Use template
+              </button>
+              <button
+                className="btn btn-ghost btn-sm"
+                style={{ color: "var(--muted)", padding: "4px 8px" }}
+                title="Delete template"
+                onClick={() => { if (window.confirm(`Delete "${tpl.name}"?`)) onDelete(tpl.id); }}
+              >
+                <Icon name="trash" size={13} />
+              </button>
             </div>
-          </button>
+          </div>
         ))}
       </div>
+
+      {useModalTpl && (
+        <UseTemplateModal
+          template={useModalTpl}
+          onClose={() => setUseModalTpl(null)}
+          onApply={(clientId) => { onUse(useModalTpl, clientId); setUseModalTpl(null); }}
+        />
+      )}
     </div>
   );
 };

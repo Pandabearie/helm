@@ -104,6 +104,9 @@ const App = () => {
   const [savedView, setSavedView] = React.useState(null);
   const [clientFilter, setClientFilter] = React.useState(null);
   const [tagFilter, setTagFilter] = React.useState(null);
+  const [statusFilter, setStatusFilter] = React.useState(null);
+  const [priorityFilter, setPriorityFilter] = React.useState(null);
+  const [filterOpen, setFilterOpen] = React.useState(false);
   const [focusedClient, setFocusedClient] = React.useState(null);
   const [listGroupBy, setListGroupBy] = React.useState("status");
   const [search, setSearch] = React.useState("");
@@ -143,6 +146,8 @@ const App = () => {
     return tasks.filter(t => {
       if (clientFilter && t.client !== clientFilter) return false;
       if (tagFilter && !t.tags.includes(tagFilter)) return false;
+      if (statusFilter && t.status !== statusFilter) return false;
+      if (priorityFilter && t.priority !== priorityFilter) return false;
       if (savedView) {
         if (savedView.filter.status && t.status !== savedView.filter.status) return false;
         if (savedView.filter.priority && t.priority !== savedView.filter.priority) return false;
@@ -156,7 +161,7 @@ const App = () => {
       if (search && !t.title.toLowerCase().includes(search.toLowerCase())) return false;
       return true;
     });
-  }, [tasks, clientFilter, tagFilter, savedView, search]);
+  }, [tasks, clientFilter, tagFilter, statusFilter, priorityFilter, savedView, search]);
 
   // Handlers
   const openTask = (id) => setOpenTaskId(id);
@@ -402,7 +407,7 @@ const App = () => {
       case "clients":   return <ClientsView {...baseProps} timeEntries={timeEntries} focusedClient={focusedClient || clientFilter} setFocusedClient={(id) => { setFocusedClient(id); if (!id) setClientFilter(null); }} />;
       case "timesheet":  return <TimesheetView tasks={tasks} timeEntries={timeEntries} onStartTimer={startTimer} />;
       case "reports":    return <ReportsView tasks={tasks} timeEntries={timeEntries} />;
-      case "templates":  return <TemplatesView templates={templates} onOpenTemplate={setOpenTemplateId} onCreate={createTemplate} />;
+      case "templates":  return <TemplatesView templates={templates} onOpenTemplate={setOpenTemplateId} onCreate={createTemplate} onDelete={deleteTemplate} onUse={applyTemplate} />;
       default:           return <div className="muted">Coming soon</div>;
     }
   };
@@ -423,28 +428,55 @@ const App = () => {
     return map[view] || ["Helm"];
   })();
 
-  const viewExtras = (() => {
-    if (view === "list") {
-      return (
+  const clearAllFilters = () => { setClientFilter(null); setTagFilter(null); setStatusFilter(null); setPriorityFilter(null); setSavedView(null); setFilterOpen(false); };
+  const activeFilterCount = [clientFilter, tagFilter, statusFilter, priorityFilter, savedView].filter(Boolean).length;
+  const showFilter = !["reports", "templates"].includes(view);
+
+  const viewExtras = (
+    <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+      {showFilter && (
+        <div style={{ position: "relative" }}>
+          <button
+            className={`btn btn-ghost btn-sm${activeFilterCount > 0 ? " data-active" : ""}`}
+            style={{ gap: 5, color: activeFilterCount > 0 ? "var(--accent)" : undefined }}
+            onClick={() => setFilterOpen(o => !o)}
+          >
+            <Icon name="filter" size={13} />
+            Filter
+            {activeFilterCount > 0 && (
+              <span style={{ background: "var(--accent)", color: "#fff", borderRadius: 99, fontSize: 10, minWidth: 16, height: 16, display: "inline-flex", alignItems: "center", justifyContent: "center", padding: "0 4px" }}>
+                {activeFilterCount}
+              </span>
+            )}
+          </button>
+          {filterOpen && (
+            <FilterDropdown
+              clientFilter={clientFilter} setClientFilter={setClientFilter}
+              tagFilter={tagFilter} setTagFilter={setTagFilter}
+              statusFilter={statusFilter} setStatusFilter={setStatusFilter}
+              priorityFilter={priorityFilter} setPriorityFilter={setPriorityFilter}
+              onClose={() => setFilterOpen(false)}
+              onClearAll={clearAllFilters}
+            />
+          )}
+        </div>
+      )}
+      {view === "list" && (
         <div className="viewseg">
-          {[["status", "Status"], ["client", "Client"], ["priority", "Priority"]].map(([id, name]) => (
-            <button key={id} data-active={listGroupBy === id} onClick={() => setListGroupBy(id)}>{name}</button>
+          {[["status", "Status"], ["client", "Client"], ["priority", "Priority"]].map(([id, lbl]) => (
+            <button key={id} data-active={listGroupBy === id} onClick={() => setListGroupBy(id)}>{lbl}</button>
           ))}
         </div>
-      );
-    }
-    if (view === "kanban" || view === "list") {
-      // chip bar with filters could go here, but we put it in content
-    }
-    return null;
-  })();
+      )}
+    </div>
+  );
 
   const isFlush = view === "kanban";
   const isTimingThis = timer.taskId === openTaskId && timer.running;
 
   // active filter chips bar (above main content for most views)
   const filterBar = (
-    (clientFilter || tagFilter || savedView) && view !== "clients" ? (
+    activeFilterCount > 0 && !["clients", "reports", "templates"].includes(view) ? (
       <div className="filter-bar">
         <Icon name="filter" size={14} className="muted" />
         <span className="text-xs muted">Filtered by:</span>
@@ -461,6 +493,19 @@ const App = () => {
             <Icon name="x" size={12} className="x" />
           </button>
         )}
+        {statusFilter && (
+          <button className="filter-chip" data-active onClick={() => setStatusFilter(null)}>
+            <StatusDot status={statusFilter} />
+            {STATUSES.find(s => s.id === statusFilter)?.name}
+            <Icon name="x" size={12} className="x" />
+          </button>
+        )}
+        {priorityFilter && (
+          <button className="filter-chip" data-active onClick={() => setPriorityFilter(null)}>
+            {PRIORITIES.find(p => p.id === priorityFilter)?.name}
+            <Icon name="x" size={12} className="x" />
+          </button>
+        )}
         {savedView && (
           <button className="filter-chip" data-active onClick={() => setSavedView(null)}>
             <Icon name={savedView.icon} size={12} />
@@ -468,7 +513,7 @@ const App = () => {
             <Icon name="x" size={12} className="x" />
           </button>
         )}
-        <button className="btn btn-ghost btn-sm" onClick={() => { setClientFilter(null); setTagFilter(null); setSavedView(null); }} style={{ marginLeft: 4 }}>Clear all</button>
+        <button className="btn btn-ghost btn-sm" onClick={clearAllFilters} style={{ marginLeft: 4 }}>Clear all</button>
       </div>
     ) : null
   );
