@@ -299,7 +299,7 @@ const Topbar = ({ crumbs, onSearch, onQuickAdd, theme, setTheme, onToggleSidebar
 
 // ============ floating timer ============
 
-const FloatingTimer = ({ timer, onStop, onResume, onClear, tasks, onOpenTask }) => {
+const FloatingTimer = ({ timer, onStop, onResume, onToggleBillable, tasks, onOpenTask }) => {
   const [now, setNow] = React.useState(Date.now());
   React.useEffect(() => {
     if (!timer.running) return;
@@ -320,6 +320,11 @@ const FloatingTimer = ({ timer, onStop, onResume, onClear, tasks, onOpenTask }) 
         {task ? task.title : <span style={{ color: "var(--faint)" }}>No task selected</span>}
       </div>
       <span className={`timer-time ${timer.running ? "live" : ""}`}>{fmtHMS(elapsed)}</span>
+      <button
+        onClick={onToggleBillable}
+        title={timer.billable !== false ? "Billable — click to mark non-billable" : "Non-billable — click to mark billable"}
+        style={{ background: "none", border: "none", cursor: "pointer", fontWeight: 700, fontSize: 13, padding: "0 4px", color: timer.billable !== false ? "var(--accent)" : "var(--muted)", lineHeight: 1 }}
+      >$</button>
       {timer.running ? (
         <button className="timer-btn pause" onClick={onStop} title="Pause"><Icon name="pause" size={14} /></button>
       ) : (
@@ -438,7 +443,7 @@ const CmdK = ({ open, onClose, tasks, onPick, onJump }) => {
 
 // ============ task detail panel ============
 
-const TaskPanel = ({ taskId, tasks, onClose, onUpdate, onStartTimer, isTimingThis, onDeleteTask, me }) => {
+const TaskPanel = ({ taskId, tasks, onClose, onUpdate, onStartTimer, isTimingThis, onDeleteTask, onDuplicateTask, onAddTimeEntry, me }) => {
   const task = tasks.find(t => t.id === taskId);
   const [newSub, setNewSub] = React.useState("");
   const [newComment, setNewComment] = React.useState("");
@@ -447,14 +452,22 @@ const TaskPanel = ({ taskId, tasks, onClose, onUpdate, onStartTimer, isTimingThi
   const [showClientPicker, setShowClientPicker] = React.useState(false);
   const [showPriorityPicker, setShowPriorityPicker] = React.useState(false);
   const [showAssigneePicker, setShowAssigneePicker] = React.useState(false);
+  const [showBlockedBy, setShowBlockedBy] = React.useState(false);
+  const [showRecurring, setShowRecurring] = React.useState(false);
   const [editingSub, setEditingSub] = React.useState(null);
   const [confirmDelete, setConfirmDelete] = React.useState(false);
+  const [showAddTime, setShowAddTime] = React.useState(false);
+  const [addTimeDur, setAddTimeDur] = React.useState(30);
+  const [addTimeNote, setAddTimeNote] = React.useState("");
+  const [addTimeDate, setAddTimeDate] = React.useState(() => new Date().toISOString().slice(0, 10));
+  const [addTimeBillable, setAddTimeBillable] = React.useState(true);
 
   // Close popovers when task changes
   React.useEffect(() => {
     setShowMore(false); setShowTagPicker(false);
     setShowClientPicker(false); setShowPriorityPicker(false);
-    setShowAssigneePicker(false);
+    setShowAssigneePicker(false); setShowBlockedBy(false);
+    setShowRecurring(false); setShowAddTime(false);
     setEditingSub(null); setConfirmDelete(false);
   }, [taskId]);
 
@@ -533,13 +546,29 @@ const TaskPanel = ({ taskId, tasks, onClose, onUpdate, onStartTimer, isTimingThi
               <Icon name="more" size={16} />
             </button>
             {showMore && (
-              <div className="popover" style={{ top: 32, right: 0 }}>
+              <div className="popover" style={{ top: 32, right: 0, minWidth: 200 }}>
                 <button className="popover-item" onClick={() => { update({ status: task.status === "done" ? "todo" : "done" }); setShowMore(false); }}>
                   <Icon name="check" size={14} /> Mark {task.status === "done" ? "incomplete" : "complete"}
                 </button>
-                <button className="popover-item" onClick={() => { update({ recurring: task.recurring ? null : "weekly" }); setShowMore(false); }}>
-                  <Icon name="repeat" size={14} /> {task.recurring ? "Remove recurrence" : "Make weekly"}
+                <button className="popover-item" onClick={() => { onDuplicateTask && onDuplicateTask(task.id); setShowMore(false); }}>
+                  <Icon name="repeat" size={14} /> Duplicate task
                 </button>
+                <div className="popover-divider" />
+                <button className="popover-item" onClick={() => setShowRecurring(o => !o)}>
+                  <Icon name="repeat" size={14} />
+                  <span style={{ flex:1 }}>Recurring{task.recurring ? ` · ${task.recurring}` : ""}</span>
+                  <Icon name={showRecurring ? "chev-down" : "chev-right"} size={12} />
+                </button>
+                {showRecurring && (
+                  <div style={{ padding: "0 0 4px" }}>
+                    {[["none","No recurrence"],["daily","Daily"],["weekly","Weekly"],["monthly","Monthly"],["quarterly","Quarterly"]].map(([v, label]) => (
+                      <button key={v} className="popover-item" style={{ paddingLeft: 28, fontSize: 12.5 }} onClick={() => { update({ recurring: v === "none" ? null : v }); setShowRecurring(false); setShowMore(false); }}>
+                        <span style={{ flex:1 }}>{label}</span>
+                        {((v === "none" && !task.recurring) || task.recurring === v) && <Icon name="check" size={12} style={{ color:"var(--accent)" }} />}
+                      </button>
+                    ))}
+                  </div>
+                )}
                 <div className="popover-divider" />
                 <button className="popover-item danger" onClick={() => { setConfirmDelete(true); setShowMore(false); }}>
                   <Icon name="trash" size={14} /> Delete task
@@ -652,22 +681,87 @@ const TaskPanel = ({ taskId, tasks, onClose, onUpdate, onStartTimer, isTimingThi
               </div>
             </div>
 
-            {/* Estimate */}
-            <div className="tp-row">
-              <span className="lbl">Time</span>
-              <div className="text-mono" style={{ fontSize: 12, display: "flex", alignItems: "center", gap: 4 }}>
-                <span style={{ color: "var(--text)" }}>{fmtMinutes(task.logged)}</span>
-                <span className="muted">/</span>
-                <input
-                  type="number"
-                  className="field-edit"
-                  style={{ width: 70, padding: "3px 6px" }}
-                  min={0}
-                  step={15}
-                  value={task.estimate || 0}
-                  onChange={e => update({ estimate: parseInt(e.target.value, 10) || 0 })}
-                />
-                <span className="muted">min est.</span>
+            {/* Time + manual log */}
+            <div className="tp-row" style={{ alignItems: "flex-start" }}>
+              <span className="lbl" style={{ paddingTop: 5 }}>Time</span>
+              <div style={{ flex: 1 }}>
+                <div className="text-mono" style={{ fontSize: 12, display: "flex", alignItems: "center", gap: 4 }}>
+                  <span style={{ color: "var(--text)" }}>{fmtMinutes(task.logged)}</span>
+                  <span className="muted">/</span>
+                  <input type="number" className="field-edit" style={{ width: 70, padding: "3px 6px" }} min={0} step={15}
+                    value={task.estimate || 0} onChange={e => update({ estimate: parseInt(e.target.value, 10) || 0 })} />
+                  <span className="muted">min est.</span>
+                  <button className="btn btn-ghost btn-sm" style={{ marginLeft: 4, fontSize: 11, padding: "2px 7px", color: "var(--accent)" }}
+                    onClick={() => setShowAddTime(o => !o)} title="Log time manually">
+                    + log time
+                  </button>
+                </div>
+                {showAddTime && (
+                  <div style={{ marginTop: 8, background: "var(--surface-2)", borderRadius: "var(--radius)", padding: "10px 12px" }}>
+                    <div style={{ fontSize: 12, fontWeight: 500, marginBottom: 8, color: "var(--text-2)" }}>Log time manually</div>
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 8 }}>
+                      <div>
+                        <div style={{ fontSize: 11, color: "var(--muted)", marginBottom: 3 }}>Minutes</div>
+                        <input type="number" className="field-edit" style={{ width: "100%" }} min={1} value={addTimeDur} onChange={e => setAddTimeDur(e.target.value)} />
+                      </div>
+                      <div>
+                        <div style={{ fontSize: 11, color: "var(--muted)", marginBottom: 3 }}>Date</div>
+                        <input type="date" className="field-edit" style={{ width: "100%" }} value={addTimeDate} onChange={e => setAddTimeDate(e.target.value)} />
+                      </div>
+                    </div>
+                    <input className="field-edit" style={{ width: "100%", marginBottom: 8 }} placeholder="Note (optional)" value={addTimeNote} onChange={e => setAddTimeNote(e.target.value)} />
+                    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                      <label style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 12, cursor: "pointer", color: "var(--text-2)" }}>
+                        <input type="checkbox" checked={addTimeBillable} onChange={e => setAddTimeBillable(e.target.checked)} /> Billable
+                      </label>
+                      <div style={{ flex: 1 }} />
+                      <button className="btn btn-ghost btn-sm" onClick={() => setShowAddTime(false)}>Cancel</button>
+                      <button className="btn btn-primary btn-sm" onClick={() => {
+                        onAddTimeEntry && onAddTimeEntry(task.id, { duration: Number(addTimeDur) || 30, note: addTimeNote, date: addTimeDate ? new Date(addTimeDate) : new Date(), billable: addTimeBillable });
+                        setShowAddTime(false); setAddTimeDur(30); setAddTimeNote(""); setAddTimeDate(new Date().toISOString().slice(0, 10)); setAddTimeBillable(true);
+                      }}>Add</button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Blocked by */}
+            <div className="tp-row" style={{ alignItems: "flex-start", minHeight: 36 }}>
+              <span className="lbl" style={{ paddingTop: 6 }}>Blocked by</span>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 4, position: "relative", flex: 1 }}>
+                {(task.blockedBy || []).map(bid => {
+                  const bt = tasks.find(t => t.id === bid);
+                  return bt ? (
+                    <span key={bid} className="tag" style={{ background: "var(--p1-soft, #ffe4e6)", color: "var(--p1)" }}>
+                      <Icon name="lock" size={10} />
+                      <span style={{ maxWidth: 120, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{bt.title}</span>
+                      <button className="tag-x" onClick={() => update({ blockedBy: (task.blockedBy || []).filter(id => id !== bid) })}><Icon name="x" size={9} /></button>
+                    </span>
+                  ) : null;
+                })}
+                <button data-popover-trigger className="tag" onClick={() => setShowBlockedBy(o => !o)}
+                  style={{ background: "var(--surface-2)", border: "1px dashed var(--border-strong)", cursor: "pointer" }}>
+                  <Icon name="plus" size={10} stroke={2.5} /> add
+                </button>
+                {showBlockedBy && (
+                  <div className="popover" style={{ top: 32, left: 0, maxHeight: 220, overflowY: "auto", minWidth: 220 }}>
+                    <div style={{ padding: "6px 10px 4px", fontSize: 11, color: "var(--muted)", fontWeight: 500, textTransform: "uppercase", letterSpacing: "0.05em" }}>Block this task on…</div>
+                    {tasks.filter(t => t.id !== task.id && t.status !== "done").map(t => {
+                      const isBlocking = (task.blockedBy || []).includes(t.id);
+                      return (
+                        <button key={t.id} className="popover-item" onClick={() => {
+                          const next = isBlocking ? (task.blockedBy || []).filter(id => id !== t.id) : [...(task.blockedBy || []), t.id];
+                          update({ blockedBy: next });
+                        }}>
+                          <StatusDot status={t.status} />
+                          <span style={{ flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{t.title}</span>
+                          {isBlocking && <Icon name="check" size={12} style={{ color: "var(--accent)", flexShrink: 0 }} />}
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
             </div>
 

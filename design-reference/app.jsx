@@ -107,7 +107,7 @@ const App = () => {
   const [focusedClient, setFocusedClient] = React.useState(null);
   const [listGroupBy, setListGroupBy] = React.useState("status");
   const [search, setSearch] = React.useState("");
-  const [timer, setTimer] = React.useState({ taskId: null, running: false, startedAt: null, accumulated: 0 });
+  const [timer, setTimer] = React.useState({ taskId: null, running: false, startedAt: null, accumulated: 0, billable: true });
   const [toasts, setToasts] = React.useState([]);
 
   // ---- toast helper ----
@@ -170,10 +170,27 @@ const App = () => {
       updateTask(id, { activity: [...t.activity, act] });
     }
   };
+  const getNextDate = (date, cadence) => {
+    const d = new Date(date);
+    if (cadence === "daily") d.setDate(d.getDate() + 1);
+    else if (cadence === "weekly") d.setDate(d.getDate() + 7);
+    else if (cadence === "monthly") d.setMonth(d.getMonth() + 1);
+    else if (cadence === "quarterly") d.setMonth(d.getMonth() + 3);
+    return d;
+  };
+
   const toggleDone = (id) => {
     const t = tasks.find(x => x.id === id);
     if (!t) return;
-    moveTask(id, t.status === "done" ? "todo" : "done");
+    const newStatus = t.status === "done" ? "todo" : "done";
+    moveTask(id, newStatus);
+    // Auto-create next occurrence for recurring tasks
+    if (newStatus === "done" && t.recurring) {
+      const nextDue = t.due ? getNextDate(new Date(t.due), t.recurring) : null;
+      const newId = `t-rec-${Date.now()}`;
+      setTasks(ts => [...ts, { ...t, id: newId, status: "todo", logged: 0, due: nextDue, start: null, comments: [], activity: [{ kind: "create", text: `auto-created (${t.recurring} recurrence)`, user: "u-me", at: new Date() }], createdAt: new Date() }]);
+      pushToast(`Next ${t.recurring} recurrence created`, { icon: "repeat" });
+    }
   };
   const createTask = (data) => {
     const newId = `t-new-${Date.now()}`;
@@ -193,9 +210,41 @@ const App = () => {
       subtasks: [],
       comments: [],
       activity: [{ kind: "create", text: "created this task", user: "u-me", at: new Date() }],
+      blockedBy: [],
+      recurring: null,
       ...data,
     }, ...ts]);
     pushToast("Task created", { icon: "plus" });
+  };
+
+  const duplicateTask = (id) => {
+    const src = tasks.find(t => t.id === id);
+    if (!src) return;
+    const newId = `t-dup-${Date.now()}`;
+    setTasks(ts => [{ ...src, id: newId, title: src.title + " (copy)", logged: 0, comments: [], activity: [{ kind: "create", text: "duplicated from another task", user: "u-me", at: new Date() }], createdAt: new Date() }, ...ts]);
+    pushToast("Task duplicated", { icon: "repeat" });
+  };
+
+  const addTimeEntry = (taskId, { duration, note, date, billable = true }) => {
+    const task = tasks.find(t => t.id === taskId);
+    if (!task) return;
+    const mins = Math.max(1, Math.round(Number(duration) || 30));
+    setTasks(ts => ts.map(t => t.id === taskId ? { ...t, logged: t.logged + mins } : t));
+    setTimeEntries(es => [{ id: `e-manual-${Date.now()}`, task: taskId, client: task.client, duration: mins, date: date || new Date(), note: note || "Manual entry", billable }, ...es]);
+    const h = Math.floor(mins / 60), m = mins % 60;
+    pushToast(`${h > 0 ? h + "h " : ""}${m}m logged`, { icon: "timer" });
+  };
+
+  const reorderTasks = (fromId, toId) => {
+    setTasks(ts => {
+      const from = ts.findIndex(t => t.id === fromId);
+      const to = ts.findIndex(t => t.id === toId);
+      if (from === -1 || to === -1 || from === to) return ts;
+      const next = [...ts];
+      const [moved] = next.splice(from, 1);
+      next.splice(to, 0, moved);
+      return next;
+    });
   };
   const deleteTask = (id) => {
     const t = tasks.find(x => x.id === id);
@@ -306,10 +355,10 @@ const App = () => {
         setTasks(ts => ts.map(x => x.id === t.taskId ? { ...x, logged: x.logged + mins } : x));
         const task = tasks.find(x => x.id === t.taskId);
         if (task) {
-          setTimeEntries(es => [{ id: `e-new-${Date.now()}`, task: t.taskId, client: task.client, duration: mins, date: new Date(), note: "Tracked session" }, ...es]);
+          setTimeEntries(es => [{ id: `e-new-${Date.now()}`, task: t.taskId, client: task.client, duration: mins, date: new Date(), note: "Tracked session", billable: t.billable !== false }, ...es]);
         }
       }
-      return { taskId: t.taskId, running: false, startedAt: null, accumulated: 0 };
+      return { taskId: t.taskId, running: false, startedAt: null, accumulated: 0, billable: t.billable !== false };
     });
   };
   const resumeTimer = () => {
@@ -346,7 +395,7 @@ const App = () => {
       case "overview":  return <OverviewView {...baseProps} timeEntries={timeEntries} me={profile} />;
       case "mytasks":   return <MyTasksView {...baseProps} onToggleDone={toggleDone} />;
       case "inbox":     return <InboxView inbox={inbox} tasks={tasks} onOpenTask={openTask} onMarkRead={markRead} onMarkAllRead={markAllRead} />;
-      case "list":      return <ListView {...baseProps} onToggleDone={toggleDone} groupBy={listGroupBy} />;
+      case "list":      return <ListView {...baseProps} onToggleDone={toggleDone} groupBy={listGroupBy} onReorderTasks={reorderTasks} />;
       case "kanban":    return <KanbanView {...baseProps} onMoveTask={moveTask} onQuickAdd={(status) => { setQuickAddStatus(status); setQuickAddOpen(true); }} />;
       case "calendar":  return <CalendarView tasks={filteredTasks} onOpenTask={openTask} />;
       case "timeline":  return <TimelineView tasks={filteredTasks} onOpenTask={openTask} />;
@@ -462,6 +511,7 @@ const App = () => {
           timer={timer}
           onStop={() => stopTimer()}
           onResume={resumeTimer}
+          onToggleBillable={() => setTimer(t => ({ ...t, billable: !t.billable }))}
           tasks={tasks}
           onOpenTask={openTask}
         />
@@ -475,6 +525,8 @@ const App = () => {
         onStartTimer={startTimer}
         isTimingThis={isTimingThis}
         onDeleteTask={deleteTask}
+        onDuplicateTask={duplicateTask}
+        onAddTimeEntry={addTimeEntry}
         me={profile}
       />
 

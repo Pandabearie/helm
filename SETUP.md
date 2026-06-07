@@ -1,53 +1,39 @@
 # Helm — Setup, Debug Findings & Roadmap
 
-This document covers three things:
-1. **Known bugs** — dead buttons and broken wiring found in the current codebase
+This document covers:
+1. **Known bugs** — dead buttons and broken wiring found in the codebase
 2. **Gap analysis** — features Asana and Monday.com have that Helm is missing
-3. **Suggested additions** — a prioritised backlog of what to build next, with implementation notes
+3. **Suggested additions** — a prioritised backlog of what to build next
+4. **Beginner setup guide** — how to run Helm on Windows with no coding experience
 
 ---
 
 ## 1. Known Bugs & Dead Wiring
 
-The audit below was run against `design-reference/` (ui.jsx, views.jsx, app.jsx, templates.jsx).
+### Phase 1 bugs — ✅ All fixed
 
-### 1.1 Buttons that render but do nothing
-
-| Component | File | Issue |
+| Component | Issue | Status |
 |---|---|---|
-| Sidebar → Clients "+" button | `ui.jsx` ~line 208 | Renders with `title="Manage"` but has no `onClick`. Should open a "New client" modal. |
-| Sidebar → Tags "+" button | `ui.jsx` ~line 231 | Same — no `onClick`. Should open a "New tag" modal. |
-| Kanban column "+" button | `views.jsx` ~line 281 | Each column has a `+` icon button with no handler. Should quick-add a task pre-set to that column's status. |
+| Sidebar → Clients "+" button | No `onClick` — did nothing | ✅ Fixed — opens New Client modal |
+| Sidebar → Tags "+" button | No `onClick` — did nothing | ✅ Fixed — opens New Tag modal |
+| Kanban column "+" button | No click handler | ✅ Fixed — opens Quick-add pre-set to that column's status |
+| Saved Views buttons | Rendered but non-functional | ✅ Fixed — each applies a preset filter to List view |
+| Assignees field | Read-only display, no picker | ✅ Fixed — click opens toggle-picker popover |
+| FloatingTimer "Resume" | Disabled with no feedback | ✅ Fixed — tooltip hints user to start from a task |
 
-### 1.2 Saved Views — completely non-functional
+### Phase 2 bugs — ✅ All fixed
 
-All four Saved View items in the sidebar ("Due this week", "P1 across clients", "Blocked", "Billing & admin") are rendered as `<button>` elements with no `onClick`. Clicking them does nothing.
-
-**Fix needed:** Each saved view should apply a preset filter (status, priority, tags) to the List view and navigate there.
-
-### 1.3 Assignees field is read-only
-
-In the Task detail panel (`ui.jsx` ~line 608), the Assignees row renders as a plain `<AvatarStack>` with no click handler. There is no way to add or change assignees from the UI.
-
-**Fix needed:** Clicking the assignee area should open a picker popover (same pattern as the client and tag pickers).
-
-### 1.4 FloatingTimer "Resume" button disabled with no feedback
-
-When the timer has no active task (`timer.taskId === null`), the Resume button is `disabled` with no explanation. Users have no way to know they need to start a timer from a task first.
-
-**Fix needed:** When disabled, show a tooltip or inline hint: "Start a timer from any task to begin tracking."
-
-### 1.5 Silent timer stop logs no time entry
-
-When switching tasks mid-session, `stopTimer(true)` is called with `silent = true`, which skips creating a `timeEntry`. The elapsed time is committed to the task's `logged` field but leaves no record in the timesheet.
-
-**Fix needed:** Remove the `silent` flag and always create a time entry, OR show the elapsed time in a toast so the user knows it was counted.
-
-### 1.6 No way to create or edit Clients or Tags from the UI
-
-Clients and Tags are currently hardcoded in `data.jsx` seed data. The app has no screens or modals for adding, editing, or deleting clients or tags. This means the only way to change them is to directly edit `helm-data.json`.
-
-**Fix needed:** New client modal (name, color, rate, retainer, brief) and new tag modal (name, color). This is a critical gap — the app is unusable for a real workspace without it.
+| Feature | Issue | Status |
+|---|---|---|
+| Duplicate task | Missing from ⋯ menu | ✅ Added |
+| Manual time entry | Timer-only input | ✅ "+ log time" form in Task Panel |
+| Billable / non-billable flag | Always treated as billable | ✅ Toggle on timer and time entries |
+| Recurring task UI | No way to set cadence | ✅ Sub-picker in ⋯ menu (None/Daily/Weekly/Monthly/Quarterly) |
+| Task dependencies | No "blocked by" concept | ✅ "Blocked by" picker in Task Panel + lock icon on blocked tasks |
+| Budget tracking | No progress bar | ✅ Progress bar in Client detail (amber at 80%, red at 100%) |
+| Drag-to-reorder | Not available in List view | ✅ HTML5 drag-to-reorder on List view rows |
+| Billable revenue in Reports | Used hardcoded $150/hr | ✅ Now sums only billable entries at actual client rates |
+| Billable badge in Timesheet | All entries showed dollar amount | ✅ Non-billable entries show "Non-billable" label |
 
 ---
 
@@ -59,129 +45,85 @@ Features grouped by priority for a solo freelancer.
 
 | Feature | Asana | Monday | Helm status |
 |---|---|---|---|
-| Create / edit / delete Clients | ✅ | ✅ | ❌ Hardcoded seed data only |
-| Create / edit / delete Tags | ✅ | ✅ | ❌ Hardcoded seed data only |
-| Edit Assignees on a task | ✅ | ✅ | ❌ Read-only display |
-| Functional Saved Views / filters | ✅ | ✅ | ❌ Buttons exist, do nothing |
-| Invoice generation or export | ✅ (via integrations) | ✅ (native CRM) | ❌ Not present |
+| Create / edit / delete Clients | ✅ | ✅ | ✅ Done (Phase 1) |
+| Create / edit / delete Tags | ✅ | ✅ | ✅ Done (Phase 1) |
+| Edit Assignees on a task | ✅ | ✅ | ✅ Done (Phase 1) |
+| Functional Saved Views / filters | ✅ | ✅ | ✅ Done (Phase 1) |
+| Invoice generation or export | ✅ (via integrations) | ✅ (native CRM) | ❌ Not present — Phase 3 |
 
 ### 🟠 High-value gaps (commonly used daily)
 
 | Feature | Asana | Monday | Helm status |
 |---|---|---|---|
-| Task dependencies (blocked by / blocking) | ✅ | ✅ | ❌ |
-| Milestones | ✅ | ✅ | ❌ |
-| Bulk task editing (multi-select) | ✅ | ✅ | ❌ |
-| Convert comment to task | ✅ | ✅ | ❌ |
-| Billable vs. non-billable time flag per entry | ✅ | ✅ | ❌ Always treated as billable |
-| Budget tracking (hours remaining vs. estimate) | ✅ | ✅ | ❌ |
+| Task dependencies (blocked by / blocking) | ✅ | ✅ | ✅ Done (Phase 2) |
+| Billable vs. non-billable time flag per entry | ✅ | ✅ | ✅ Done (Phase 2) |
+| Budget tracking (hours remaining vs. estimate) | ✅ | ✅ | ✅ Done (Phase 2) |
+| Duplicate task | ✅ | ✅ | ✅ Done (Phase 2) |
+| Manual time entry (add time without timer) | ✅ | ✅ | ✅ Done (Phase 2) |
+| Drag-to-reorder tasks within a list | ✅ | ✅ | ✅ Done (Phase 2) |
+| Milestones | ✅ | ✅ | ❌ Phase 3 |
+| Bulk task editing (multi-select) | ✅ | ✅ | ❌ Phase 3 |
 | Due date reminders / push alerts | ✅ | ✅ | ❌ Inbox notifications are static |
-| Duplicate task | ✅ | ✅ | ❌ |
-| Manual time entry (add time without timer) | ✅ | ✅ | ❌ Timer only |
 | Global search with saved filters | ✅ | ✅ | ⚠️ CmdK exists but no saved filter state |
-| Drag-to-reorder tasks within a list | ✅ | ✅ | ❌ |
-| Portfolio / cross-client health view | ✅ | ✅ | ❌ |
-| Client intake form → auto-creates tasks | ✅ | ✅ | ❌ |
+| Portfolio / cross-client health view | ✅ | ✅ | ❌ Phase 3 |
+| Client intake form → auto-creates tasks | ✅ | ✅ | ❌ Phase 3 |
 
 ### 🟡 Medium-value gaps (differentiators)
 
 | Feature | Asana | Monday | Helm status |
 |---|---|---|---|
-| Recurring task cadence editor (UI) | ✅ | ✅ | ⚠️ Field exists in data model, no UI to set it |
-| Automation rules (when X → then Y) | ✅ | ✅ | ❌ |
+| Recurring task cadence editor (UI) | ✅ | ✅ | ✅ Done (Phase 2) |
+| Automation rules (when X → then Y) | ✅ | ✅ | ❌ Phase 3 |
 | Timesheet approval workflow | ✅ | ✅ | ❌ |
-| Docs / notes layer per client or project | ✅ | ✅ | ❌ |
-| File attachments on tasks | ✅ | ✅ | ❌ |
-| Comment reactions (emoji) | ✅ | ✅ | ❌ |
+| Docs / notes layer per client or project | ✅ | ✅ | ❌ Phase 3 |
+| File attachments on tasks | ✅ | ✅ | ❌ Phase 4 |
+| Comment reactions (emoji) | ✅ | ✅ | ❌ Phase 4 |
 | Dark mode system-preference auto-detect | ✅ | ✅ | ⚠️ Toggle exists, no `prefers-color-scheme` auto |
-| Calendar two-way sync (Google Cal) | ✅ | ✅ | ❌ |
+| Calendar two-way sync (Google Cal) | ✅ | ✅ | ❌ Phase 4 |
 | Mobile app | ✅ | ✅ | ❌ Web only |
-| Template variable substitution (fill dates/client on apply) | ✅ | ✅ | ⚠️ Templates apply tasks but don't auto-fill dates |
-| Status update / project health posts | ✅ | ✅ | ❌ |
-| Workload / capacity view | ✅ | ✅ | ❌ |
+| Template variable substitution | ✅ | ✅ | ⚠️ Templates apply tasks but don't auto-fill dates |
+| Workload / capacity view | ✅ | ✅ | ❌ Phase 3 |
 
 ### 🟢 Nice-to-have (power user / future)
 
 | Feature | Asana | Monday | Helm status |
 |---|---|---|---|
-| AI task summaries | ✅ | ✅ | ❌ |
-| AI-generated project templates | ✅ | ✅ | ❌ |
-| Zapier / webhook automations | ✅ | ✅ | ❌ |
-| E-signature integration (DocuSign, PandaDoc) | ✅ | ✅ | ❌ |
-| Guest / client portal (view-only share link) | ✅ | ✅ | ❌ |
-| iOS / Android app | ✅ | ✅ | ❌ |
-| Slack integration | ✅ | ✅ | ❌ |
+| AI task summaries | ✅ | ✅ | ❌ Phase 4 |
+| Zapier / webhook automations | ✅ | ✅ | ❌ Phase 4 |
+| Guest / client portal (view-only share link) | ✅ | ✅ | ❌ Phase 4 |
+| iOS / Android app | ✅ | ✅ | ❌ Phase 4 |
+| Slack integration | ✅ | ✅ | ❌ Phase 4 |
 
 ---
 
 ## 3. Suggested Additions — Prioritised Backlog
 
-Each item below includes what to build and where it slots into the existing architecture.
+---
+
+### PHASE 1 — Fix what's broken ✅ Complete
+
+All six confirmed bugs have been resolved. Client CRUD, Tag CRUD, Saved Views, Assignee picker, Kanban column quick-add, and FloatingTimer feedback are all working.
 
 ---
 
-### PHASE 1 — Fix what's broken (do this first)
+### PHASE 2 — Core missing features ✅ Complete
 
-#### 1.1 Client CRUD modal
-**What:** A "New / Edit client" modal with fields: Name, Color picker, Initials (auto-derived), Hourly rate, Monthly retainer, Brief.  
-**Where:** Triggered by the already-present sidebar "+" button (`ui.jsx` line 208). Add `onCreateClient` / `onUpdateClient` / `onDeleteClient` handlers in `app.jsx`. Persist to `helm-data.json` alongside tasks.  
-**Note:** `CLIENTS` is currently a constant in `data.jsx` — it needs to move to the persisted store.
+All Phase 2 items are implemented:
 
-#### 1.2 Tag CRUD modal
-**What:** A "New / Edit tag" modal with Name and a color swatch picker (reuse the 8 preset colors from the design tokens).  
-**Where:** Triggered by the sidebar "+" button (`ui.jsx` line 231). Same pattern as 1.1. Move `TAGS` to persisted store.
-
-#### 1.3 Wire Saved Views
-**What:** Each of the 4 saved views should apply a preset filter to the List view. "Due this week" → filter tasks due within 7 days. "P1 across clients" → filter priority=p1. "Blocked" → filter status=blocked. "Billing & admin" → filter tags includes t-billing or t-admin.  
-**Where:** Add an `onClick` to each saved view button in `ui.jsx`. Pass a `savedView` state to `app.jsx` and apply it in `filteredTasks`.  
-**Note:** Eventually saved views should be user-editable (name + filter config stored in the data file).
-
-#### 1.4 Assignee picker on Task Panel
-**What:** Clicking the Assignees row in TaskPanel opens a popover listing `ALL_USERS`. Toggle-select adds/removes from `task.assignees`.  
-**Where:** `ui.jsx` TaskPanel, ~line 608. Reuse the same popover pattern already used for client and tag pickers.
-
-#### 1.5 Kanban column "+" quick-add
-**What:** Clicking the "+" on a Kanban column opens the Quick-add modal pre-populated with that column's status.  
-**Where:** `views.jsx` KanbanView, ~line 281. Pass `onQuickAdd(status)` down and call `setQuickAddOpen(true)` with a default status.
-
----
-
-### PHASE 2 — Core missing features (highest daily value)
-
-#### 2.1 Duplicate task
-**What:** "Duplicate task" option in the Task Panel "⋯" menu. Copies all fields except activity log and comments.  
-**Where:** `app.jsx` already has a stub `duplicateTask` handler (referenced in old TODO comments). Wire it up in the panel menu in `ui.jsx`.
-
-#### 2.2 Manual time entry
-**What:** An "Add time" button in the Task Panel (next to the logged time field) that opens a small form: duration (HH:MM), date, note. Creates a `timeEntry` and increments `task.logged`.  
-**Where:** Add to `ui.jsx` TaskPanel. Handler already exists (`setTimeEntries`) in `app.jsx`.
-
-#### 2.3 Billable / non-billable flag on time entries
-**What:** Each time entry and the floating timer gets a toggle: billable (default on) / non-billable.  
-**Where:** Add `billable: true` to the `timeEntry` shape in `data.jsx`. Update Timesheet and Reports to only sum billable hours for revenue figures.
-
-#### 2.4 Recurring task UI
-**What:** The data model already has a `recurring` field. Add a UI to set it: a dropdown in the Task Panel "⋯" menu (None / Daily / Weekly / Monthly / Quarterly). When a recurring task is marked Done, automatically create the next occurrence.  
-**Where:** `ui.jsx` TaskPanel "⋯" menu. Logic in `app.jsx` `toggleDone`.
-
-#### 2.5 Task dependencies
-**What:** A "Blocked by" field on each task — a multi-select task picker. Show a visual indicator (lock icon) on blocked tasks throughout List and Board views.  
-**Where:** Add `blockedBy: []` to the task schema. Add a picker in `ui.jsx` TaskPanel. Add a `StatusDot` variant for blocked-by in `views.jsx`.
-
-#### 2.6 Budget tracking per client
-**What:** Show estimated vs. logged hours on the Client detail view. Add a progress bar: `logged / (retainer / rate * 60)` minutes. Colour goes amber at 80%, red at 100%.  
-**Where:** `views.jsx` ClientsView detail section. Data already available (client.rate, client.retainer, task.logged).
-
-#### 2.7 Drag-to-reorder tasks in List view
-**What:** Native HTML5 drag-and-drop reordering within each group section of the List view. Persist the order to the data file.  
-**Where:** `views.jsx` ListView. Add a `order` field to each task (integer). Sort by `order` in list rendering.
+- **2.1 Duplicate task** — ⋯ menu in Task Panel → "Duplicate task"
+- **2.2 Manual time entry** — "+ log time" collapsible form in Task Panel (duration, date, note, billable)
+- **2.3 Billable / non-billable flag** — toggle on floating timer ("$" button) and on each manual log entry; Reports and Timesheet respect the flag
+- **2.4 Recurring task UI** — ⋯ menu sub-picker (None / Daily / Weekly / Monthly / Quarterly); auto-creates next occurrence on Done
+- **2.5 Task dependencies** — "Blocked by" picker in Task Panel; lock icon on blocked task rows in List view
+- **2.6 Budget tracking** — progress bar in Client detail view (retainer ÷ rate = budgeted hours; amber at 80%, red at 100%)
+- **2.7 Drag-to-reorder** — HTML5 drag handles on List view rows; blue drop-line shows landing position
 
 ---
 
 ### PHASE 3 — High-value additions (power up the app)
 
 #### 3.1 Client notes / docs layer
-**What:** A rich-text notes field per client — a free-form scratchpad for briefs, meeting notes, and context. Not linked to tasks.  
+**What:** A rich-text notes field per client — a free-form scratchpad for briefs, meeting notes, and context.  
 **Where:** Add `notes: ""` to the client schema. Show a "Notes" tab in the Client detail view. Use a simple `<textarea>` or a lightweight rich-text editor like Tiptap.
 
 #### 3.2 Invoice / billing summary export
@@ -205,7 +147,7 @@ Each item below includes what to build and where it slots into the existing arch
 **Where:** `app.jsx` TWEAK_DEFAULTS — replace `"theme": "light"` with a computed default.
 
 #### 3.7 Portfolio / health view
-**What:** A new "Portfolio" page showing all clients as rows with columns: Open tasks, Overdue, Hours this week, Budget burn %, Last activity. Think a spreadsheet-style health dashboard.  
+**What:** A new "Portfolio" page showing all clients as rows with columns: Open tasks, Overdue, Hours this week, Budget burn %, Last activity.  
 **Where:** New view `PortfolioView` in `views.jsx`. Nav item in `ui.jsx` sidebar.
 
 ---
@@ -225,7 +167,102 @@ Each item below includes what to build and where it slots into the existing arch
 
 ---
 
-## 4. Running the app
+## 4. Beginner Setup Guide — Windows Desktop
+
+This section is for people who have never used a terminal before. Follow every step in order.
+
+---
+
+### Step 1 — Install Node.js
+
+Node.js is the engine that runs Helm's server on your computer. You only do this once.
+
+1. Open your browser and go to **https://nodejs.org**
+2. Click the big green button labelled **"LTS" (recommended for most users)**
+3. A file called something like `node-v20.x.x-x64.msi` will download
+4. Open that file once the download finishes (it is in your Downloads folder)
+5. Click **Next** on every screen — the defaults are all correct
+6. Click **Finish** when it completes
+
+> **How to check it worked:** Press the **Windows key**, type `cmd`, and press Enter. A black window opens. Type `node --version` and press Enter. You should see a number like `v20.11.0`. If you do, Node.js is installed.
+
+---
+
+### Step 2 — Download or locate the Helm folder
+
+If you received the project as a zip file:
+
+1. Find `helm-main.zip` (or similar) in your Downloads folder
+2. Right-click it and choose **Extract All…**
+3. Choose a location you can find easily, like your Desktop
+4. Click **Extract**
+
+If you cloned it from GitHub, the folder is wherever you cloned it (likely `C:\Users\YourName\helm`).
+
+In this guide, we assume the folder is at:  
+`C:\Users\chewj\OneDrive\Desktop\Claude Code Files\design_handoff_helm`
+
+---
+
+### Step 3 — Start Helm
+
+1. Open **File Explorer** (the folder icon in your taskbar)
+2. Navigate to the Helm folder (the one that contains `start.bat`, `server.js`, and a folder called `design-reference`)
+3. You should see a file called **`start.bat`**
+4. **Double-click `start.bat`**
+
+A black window will open and show messages like:
+
+```
+Installing dependencies...
+Helm is running at http://localhost:3000
+```
+
+> **Important:** Leave this black window open while you use Helm. Closing it stops the server.
+
+---
+
+### Step 4 — Open Helm in your browser
+
+1. Open your browser (Chrome, Edge, Firefox — any of them)
+2. Click the address bar at the top
+3. Type exactly: `http://localhost:3000`
+4. Press **Enter**
+
+Helm will load and show the dashboard. Your data is saved automatically — if you close the browser and come back, everything will still be there.
+
+---
+
+### Step 5 — Stop Helm
+
+When you are finished for the day:
+
+1. Click the black `start.bat` window in your taskbar
+2. Press **Ctrl + C** (hold Ctrl, then press the letter C)
+3. The server stops. It is safe to close the window.
+
+---
+
+### Troubleshooting
+
+**"node is not recognised as an internal or external command"**  
+Node.js did not install correctly. Repeat Step 1. After installation, close and reopen the black window and try again.
+
+**The black window closes immediately after double-clicking start.bat**  
+Right-click `start.bat` and choose **"Run as administrator"**. If it still closes, open File Explorer, right-click the address bar, choose "Open in Terminal", and type `node server.js` and press Enter to see the error.
+
+**"Cannot GET /"** in the browser  
+The server started but the static files are in the wrong place. Make sure you are running `start.bat` from inside the `design_handoff_helm` folder, not from inside `design-reference/`.
+
+**Port 3000 is already in use**  
+Something else is using port 3000. Close other apps or restart your computer and try again.
+
+**Data disappeared**  
+If you reset data from the Tweaks panel, the seed data reloads. If `helm-data.json` was deleted manually, the server falls back to the example data. Your data is safe as long as `helm-data.json` exists in the Helm folder.
+
+---
+
+## 5. Running the app (developer shortcut)
 
 ```bash
 npm install     # first time only
@@ -238,7 +275,7 @@ Data is auto-saved to `helm-data.json`. To reset to the sample workspace, click 
 
 ---
 
-## 5. File reference
+## 6. File reference
 
 | File | Purpose |
 |---|---|

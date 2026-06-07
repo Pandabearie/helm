@@ -182,8 +182,10 @@ const OverviewView = ({ tasks, onOpenTask, timeEntries, onStartTimer, me }) => {
 };
 
 // ---------- List view ----------
-const ListView = ({ tasks, onOpenTask, onStartTimer, onToggleDone, groupBy }) => {
-  // Group by status by default; or by client / priority
+const ListView = ({ tasks, onOpenTask, onStartTimer, onToggleDone, groupBy, onReorderTasks }) => {
+  const [dragId, setDragId] = React.useState(null);
+  const [overId, setOverId] = React.useState(null);
+
   const groups = {};
   tasks.forEach(t => {
     let key;
@@ -204,6 +206,14 @@ const ListView = ({ tasks, onOpenTask, onStartTimer, onToggleDone, groupBy }) =>
     if (groupBy === "client") return k === "_no_client" ? "No client" : CLIENTS.find(c => c.id === k)?.name || k;
     if (groupBy === "priority") return PRIORITIES.find(p => p.id === k)?.name || k;
     return STATUSES.find(s => s.id === k)?.name || k;
+  };
+
+  const handleDrop = (toId) => {
+    if (dragId && toId && dragId !== toId && onReorderTasks) {
+      onReorderTasks(dragId, toId);
+    }
+    setDragId(null);
+    setOverId(null);
   };
 
   return (
@@ -232,10 +242,25 @@ const ListView = ({ tasks, onOpenTask, onStartTimer, onToggleDone, groupBy }) =>
               </div>
               {items.map(t => {
                 const c = CLIENTS.find(x => x.id === t.client);
+                const isBlocked = t.blockedBy && t.blockedBy.length > 0;
+                const isDragging = dragId === t.id;
+                const isOver = overId === t.id;
                 return (
-                  <div key={t.id} className="task-row" onClick={() => onOpenTask(t.id)}>
+                  <div
+                    key={t.id}
+                    className="task-row"
+                    draggable
+                    onDragStart={(e) => { e.dataTransfer.effectAllowed = "move"; setDragId(t.id); }}
+                    onDragOver={(e) => { e.preventDefault(); e.dataTransfer.dropEffect = "move"; setOverId(t.id); }}
+                    onDragLeave={() => setOverId(null)}
+                    onDrop={(e) => { e.preventDefault(); handleDrop(t.id); }}
+                    onDragEnd={() => { setDragId(null); setOverId(null); }}
+                    onClick={() => onOpenTask(t.id)}
+                    style={{ opacity: isDragging ? 0.4 : 1, borderTop: isOver && !isDragging ? "2px solid var(--accent)" : undefined, cursor: "grab" }}
+                  >
                     <Checkbox checked={t.status === "done"} onClick={(e) => { e.stopPropagation(); onToggleDone(t.id); }} />
                     <div className="task-title-cell">
+                      {isBlocked && <Icon name="lock" size={11} style={{ color: "var(--p1)", flexShrink: 0 }} />}
                       <span className={`task-title ${t.status === "done" ? "done" : ""}`}>{t.title}</span>
                       {t.subtasks.length > 0 && <span className="text-xs muted" style={{ display: "inline-flex", alignItems: "center", gap: 2 }}><Icon name="check" size={11} />{t.subtasks.filter(s => s.done).length}/{t.subtasks.length}</span>}
                       {t.recurring && <Icon name="repeat" size={11} className="muted" />}
@@ -535,6 +560,24 @@ const ClientsView = ({ tasks, timeEntries, onOpenTask, focusedClient, setFocused
           ))}
         </div>
 
+        {c.retainer > 0 && c.rate > 0 && (() => {
+          const budgetHours = c.retainer / c.rate;
+          const pct = Math.min(clientHours / budgetHours, 1);
+          const barColor = pct >= 1 ? "var(--p1)" : pct >= 0.8 ? "#f59e0b" : "var(--status-done)";
+          return (
+            <div className="card" style={{ padding: 14, marginBottom: 24 }}>
+              <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, marginBottom: 6 }}>
+                <span className="muted" style={{ fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.05em" }}>Budget</span>
+                <span className="text-mono muted">{clientHours.toFixed(1)}h / {budgetHours.toFixed(1)}h ({Math.round(pct * 100)}%)</span>
+              </div>
+              <div style={{ height: 8, borderRadius: 4, background: "var(--surface-3)", overflow: "hidden" }}>
+                <div style={{ height: "100%", width: `${pct * 100}%`, background: barColor, borderRadius: 4, transition: "width 0.3s" }} />
+              </div>
+              {pct >= 0.8 && <div className="text-xs" style={{ marginTop: 6, color: barColor }}>{pct >= 1 ? "Budget exceeded — retainer used up" : `${Math.round((1 - pct) * budgetHours * 60)} min remaining`}</div>}
+            </div>
+          );
+        })()}
+
         <h2 className="h2 mb-3">Tasks ({clientTasks.length})</h2>
         <ListView tasks={clientTasks} onOpenTask={onOpenTask} onStartTimer={onStartTimer} onToggleDone={() => {}} groupBy="status" />
       </div>
@@ -647,6 +690,11 @@ const MyTasksView = ({ tasks, onOpenTask, onStartTimer, onToggleDone }) => {
 // ---------- Reports ----------
 const ReportsView = ({ tasks, timeEntries }) => {
   const totalMinutes = timeEntries.reduce((a, e) => a + e.duration, 0);
+  const billableMinutes = timeEntries.filter(e => e.billable !== false).reduce((a, e) => a + e.duration, 0);
+  const billableRevenue = timeEntries.filter(e => e.billable !== false).reduce((a, e) => {
+    const c = CLIENTS.find(x => x.id === e.client);
+    return a + (e.duration / 60) * (c?.rate || 0);
+  }, 0);
   const byClient = {};
   CLIENTS.forEach(c => byClient[c.id] = 0);
   timeEntries.forEach(e => { if (e.client) byClient[e.client] = (byClient[e.client] || 0) + e.duration; });
@@ -679,7 +727,7 @@ const ReportsView = ({ tasks, timeEntries }) => {
 
       <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 14, marginBottom: 24 }}>
         <div className="stat-card"><div className="stat-label">Hours logged</div><div className="stat-value">{(totalMinutes/60).toFixed(1)}</div><div className="stat-sub delta-up">▲ 12% vs last week</div></div>
-        <div className="stat-card"><div className="stat-label">Billable revenue</div><div className="stat-value">${Math.round(totalMinutes/60 * 150).toLocaleString()}</div><div className="stat-sub delta-up">▲ 8%</div></div>
+        <div className="stat-card"><div className="stat-label">Billable revenue</div><div className="stat-value">${Math.round(billableRevenue).toLocaleString()}</div><div className="stat-sub delta-up">{(billableMinutes/60).toFixed(1)}h billable</div></div>
         <div className="stat-card"><div className="stat-label">Tasks completed</div><div className="stat-value">{tasks.filter(t => t.status === "done").length}</div><div className="stat-sub muted">across all clients</div></div>
         <div className="stat-card"><div className="stat-label">Avg cycle time</div><div className="stat-value">3.2<span style={{fontSize:18, color:"var(--muted)"}}>d</span></div><div className="stat-sub delta-down">▼ slower than avg</div></div>
       </div>
@@ -885,7 +933,10 @@ const TimesheetView = ({ tasks, timeEntries, onStartTimer }) => {
               </div>
               <div>{c && <ClientTag clientId={c.id} />}</div>
               <span className="text-mono text-sm cell-right">{fmtMinutes(e.duration)}</span>
-              <span className="text-mono text-sm cell-right" style={{ color: "var(--status-done)" }}>${Math.round((e.duration/60) * (c?.rate || 0))}</span>
+              {e.billable === false
+                ? <span className="text-xs muted cell-right" style={{ fontStyle: "italic" }}>Non-billable</span>
+                : <span className="text-mono text-sm cell-right" style={{ color: "var(--status-done)" }}>${Math.round((e.duration/60) * (c?.rate || 0))}</span>
+              }
             </div>
           );
         })}
