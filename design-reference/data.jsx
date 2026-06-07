@@ -1,7 +1,7 @@
 // ============ Helm — sample data ============
 // Freelance consultant managing many clients; heavy density.
 
-const TODAY = new Date(2026, 4, 28); // May 28, 2026 (matches "current date")
+const TODAY = new Date(); // always the device's current date
 
 const daysFromToday = (d) => {
   const date = new Date(TODAY);

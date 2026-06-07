@@ -275,7 +275,52 @@ Data is auto-saved to `helm-data.json`. To reset to the sample workspace, click 
 
 ---
 
-## 6. File reference
+## 6. Data persistence — how it works and future hosting options
+
+### How your data is saved right now
+
+Every change you make (new task, new client, timer stop) is sent to the Express server and written to **`helm-data.json`** — a plain file on your hard drive inside the Helm project folder.
+
+**This has nothing to do with the browser.** Clearing cookies, clearing browser cache, switching browsers — none of that affects your data. The file lives on disk, not in Chrome.
+
+### What can actually destroy your data
+
+| Risk | Effect |
+|---|---|
+| Deleting `helm-data.json` manually | Gone permanently |
+| Hard drive failure | Gone permanently |
+| Clicking "Reset all data" in the Tweaks panel | Resets to seed data |
+| Closing start.bat mid-save | Rare — a flush runs on tab close via `beforeunload` |
+
+### Option A — OneDrive auto-backup (5 minutes, free)
+
+Add a Windows Scheduled Task that copies `helm-data.json` to your OneDrive folder every hour. No infrastructure, no code changes. Protects against accidental deletion and drive failure.
+
+### Option B — Deploy to a cloud server (recommended for multi-device access)
+
+Host the whole app on Railway, Render, or Fly.io (all have free tiers). The server runs 24/7 in the cloud, the data lives on the cloud server's disk, and you access Helm from any browser on any device via a real URL instead of `localhost:3000`.
+
+**Steps (roughly):**
+1. Push repo to GitHub (already done)
+2. Connect Railway/Render to the GitHub repo
+3. Set start command to `node server.js`
+4. Add a persistent disk volume (so `helm-data.json` survives deploys)
+
+### Option C — Hosted database (most robust)
+
+Replace the `helm-data.json` file writes in `server.js` with calls to **Supabase** (free hosted PostgreSQL). Data lives in Supabase's cloud, accessible from anywhere, with full backup and point-in-time recovery.
+
+**Steps (roughly):**
+1. Create a free Supabase project
+2. Create a single `helm_data` table with a `payload JSONB` column
+3. Swap the `fs.readFileSync` / `fs.writeFileSync` calls in `server.js` for Supabase client calls
+4. Remove the `helm-data.json` dependency entirely
+
+**Cost:** Free tier covers this app with room to spare.
+
+---
+
+## 7. File reference
 
 | File | Purpose |
 |---|---|
