@@ -1,0 +1,43 @@
+{
+  "_comment": "Reference package.json for the Helm Electron production build. Wire renderer with Vite + React + TS; package with electron-builder. Versions are indicative — pin to current at build time.",
+  "name": "helm",
+  "version": "0.1.0",
+  "description": "Helm — local-first practice management for freelancers and consultants",
+  "author": "",
+  "main": "electron/main.js",
+  "scripts": {
+    "dev": "concurrently -k \"vite\" \"wait-on tcp:5173 && cross-env VITE_DEV_SERVER_URL=http://localhost:5173 electron .\"",
+    "build": "vite build",
+    "start": "electron .",
+    "package": "vite build && electron-builder",
+    "package:win": "vite build && electron-builder --win nsis",
+    "package:mac": "vite build && electron-builder --mac dmg",
+    "package:linux": "vite build && electron-builder --linux AppImage"
+  },
+  "dependencies": {
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "@types/react": "^18.3.0",
+    "@types/react-dom": "^18.3.0",
+    "@vitejs/plugin-react": "^4.3.0",
+    "concurrently": "^9.0.0",
+    "cross-env": "^7.0.3",
+    "electron": "^31.0.0",
+    "electron-builder": "^24.13.0",
+    "typescript": "^5.5.0",
+    "vite": "^5.4.0",
+    "wait-on": "^8.0.0"
+  },
+  "build": {
+    "appId": "com.helm.app",
+    "productName": "Helm",
+    "files": ["dist/**/*", "electron/**/*"],
+    "extraResources": ["electron/helm-data.example.json"],
+    "directories": { "output": "release" },
+    "win": { "target": ["nsis"] },
+    "mac": { "target": ["dmg"], "category": "public.app-category.productivity" },
+    "linux": { "target": ["AppImage"], "category": "Office" }
+  }
+}

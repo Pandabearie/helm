@@ -1,0 +1,1316 @@
+{
+  "meta": {
+    "version": 1,
+    "savedAt": "2026-06-07T09:40:15.005Z",
+    "app": "helm"
+  },
+  "profile": {
+    "id": "u-me",
+    "name": "Sasha Pereira",
+    "initials": "SP",
+    "role": "Owner",
+    "preferences": {
+      "theme": "light",
+      "accent": "#0ea5e9",
+      "density": "comfy",
+      "sidebarCollapsed": false,
+      "showFloatingTimer": true
+    }
+  },
+  "clients": [
+    {
+      "id": "c-northwind",
+      "name": "Northwind Studios",
+      "color": "#0ea5e9",
+      "initials": "NS",
+      "retainer": 6000,
+      "rate": 145,
+      "brief": "Brand refresh + new marketing site."
+    },
+    {
+      "id": "c-atelier",
+      "name": "Atelier Mori",
+      "color": "#a855f7",
+      "initials": "AM",
+      "retainer": 4500,
+      "rate": 135,
+      "brief": "E-commerce build on Shopify Plus."
+    },
+    {
+      "id": "c-halcyon",
+      "name": "Halcyon Health",
+      "color": "#10b981",
+      "initials": "HH",
+      "retainer": 8200,
+      "rate": 165,
+      "brief": "Patient portal UX redesign."
+    },
+    {
+      "id": "c-brunel",
+      "name": "Brunel Capital",
+      "color": "#f59e0b",
+      "initials": "BC",
+      "retainer": 5000,
+      "rate": 175,
+      "brief": "Investor narrative + deck."
+    },
+    {
+      "id": "c-saffron",
+      "name": "Saffron Foods",
+      "color": "#ef4444",
+      "initials": "SF",
+      "retainer": 3200,
+      "rate": 125,
+      "brief": "Packaging system + retail launch."
+    },
+    {
+      "id": "c-verdant",
+      "name": "Verdant Arch.",
+      "color": "#84cc16",
+      "initials": "VA",
+      "retainer": 2800,
+      "rate": 130,
+      "brief": "Portfolio site, low-touch."
+    },
+    {
+      "id": "c-kiln",
+      "name": "Kiln & Kettle",
+      "color": "#ec4899",
+      "initials": "KK",
+      "retainer": 4000,
+      "rate": 140,
+      "brief": "Restaurant rebrand + menu."
+    },
+    {
+      "id": "c-pelagic",
+      "name": "Pelagic Maritime",
+      "color": "#06b6d4",
+      "initials": "PM",
+      "retainer": 0,
+      "rate": 155,
+      "brief": "One-off case study writeup."
+    }
+  ],
+  "tags": [
+    {
+      "id": "t-design",
+      "name": "Design",
+      "color": "#a855f7"
+    },
+    {
+      "id": "t-dev",
+      "name": "Development",
+      "color": "#0ea5e9"
+    },
+    {
+      "id": "t-content",
+      "name": "Content",
+      "color": "#ec4899"
+    },
+    {
+      "id": "t-research",
+      "name": "Research",
+      "color": "#84cc16"
+    },
+    {
+      "id": "t-meeting",
+      "name": "Meeting",
+      "color": "#f59e0b"
+    },
+    {
+      "id": "t-admin",
+      "name": "Admin",
+      "color": "#64748b"
+    },
+    {
+      "id": "t-billing",
+      "name": "Billing",
+      "color": "#10b981"
+    },
+    {
+      "id": "t-urgent",
+      "name": "Urgent",
+      "color": "#ef4444"
+    },
+    {
+      "id": "t-deep",
+      "name": "Deep Work",
+      "color": "#6366f1"
+    }
+  ],
+  "users": [
+    {
+      "id": "u-me",
+      "name": "Sasha Pereira",
+      "initials": "SP",
+      "role": "Owner"
+    },
+    {
+      "id": "u-jm",
+      "name": "Jordan Mehta",
+      "initials": "JM"
+    },
+    {
+      "id": "u-li",
+      "name": "Lin Iwasaki",
+      "initials": "LI"
+    },
+    {
+      "id": "u-rk",
+      "name": "Rosa Klein",
+      "initials": "RK"
+    }
+  ],
+  "tasks": [
+    {
+      "id": "t-1",
+      "title": "Finalize Northwind brand guidelines v2",
+      "status": "review",
+      "priority": "p1",
+      "client": "c-northwind",
+      "tags": [
+        "t-design",
+        "t-deep"
+      ],
+      "assignees": [
+        "u-me"
+      ],
+      "due": "2026-05-27",
+      "start": "2026-05-24",
+      "estimate": 240,
+      "logged": 195,
+      "description": "Incorporate feedback from Tuesday review. Tighten color tokens, add motion principles section.",
+      "subtasks": [
+        {
+          "id": "s1",
+          "title": "Refine logo lockups",
+          "done": true
+        },
+        {
+          "id": "s2",
+          "title": "Update typography page",
+          "done": true
+        },
+        {
+          "id": "s3",
+          "title": "Add motion principles",
+          "done": false
+        },
+        {
+          "id": "s4",
+          "title": "Export PDF + Figma library",
+          "done": false
+        }
+      ],
+      "comments": [
+        {
+          "id": "cm1",
+          "user": "u-jm",
+          "text": "Pages 12–14 still showing old wordmark.",
+          "at": "2026-05-26T16:00:00.000Z"
+        },
+        {
+          "id": "cm2",
+          "user": "u-me",
+          "text": "Caught — pushing fix tonight.",
+          "at": "2026-05-26T16:00:00.000Z"
+        }
+      ],
+      "activity": [
+        {
+          "kind": "status",
+          "text": "moved to In Review",
+          "user": "u-me",
+          "at": "2026-05-26T16:00:00.000Z"
+        },
+        {
+          "kind": "comment",
+          "text": "commented",
+          "user": "u-jm",
+          "at": "2026-05-26T16:00:00.000Z"
+        }
+      ],
+      "recurring": null,
+      "createdAt": "2026-05-06T16:00:00.000Z"
+    },
+    {
+      "id": "t-2",
+      "title": "Marketing site — homepage hero direction",
+      "status": "progress",
+      "priority": "p2",
+      "client": "c-northwind",
+      "tags": [
+        "t-design"
+      ],
+      "assignees": [
+        "u-me"
+      ],
+      "due": "2026-05-29",
+      "start": "2026-05-26",
+      "estimate": 180,
+      "logged": 75,
+      "description": "",
+      "subtasks": [],
+      "comments": [],
+      "activity": [],
+      "recurring": null,
+      "createdAt": "2026-05-06T16:00:00.000Z"
+    },
+    {
+      "id": "t-3",
+      "title": "Stakeholder review — Thursday 2pm",
+      "status": "todo",
+      "priority": "p2",
+      "client": "c-northwind",
+      "tags": [
+        "t-meeting"
+      ],
+      "assignees": [
+        "u-me"
+      ],
+      "due": "2026-05-30",
+      "start": null,
+      "estimate": 60,
+      "logged": 0,
+      "description": "",
+      "subtasks": [],
+      "comments": [],
+      "activity": [],
+      "recurring": null,
+      "createdAt": "2026-05-06T16:00:00.000Z"
+    },
+    {
+      "id": "t-4",
+      "title": "Component library audit",
+      "status": "todo",
+      "priority": "p3",
+      "client": "c-northwind",
+      "tags": [
+        "t-design",
+        "t-research"
+      ],
+      "assignees": [
+        "u-me"
+      ],
+      "due": "2026-06-04",
+      "start": null,
+      "estimate": 300,
+      "logged": 0,
+      "description": "",
+      "subtasks": [],
+      "comments": [],
+      "activity": [],
+      "recurring": null,
+      "createdAt": "2026-05-06T16:00:00.000Z"
+    },
+    {
+      "id": "t-5",
+      "title": "Send May invoice",
+      "status": "todo",
+      "priority": "p2",
+      "client": "c-northwind",
+      "tags": [
+        "t-billing",
+        "t-admin"
+      ],
+      "assignees": [
+        "u-me"
+      ],
+      "due": "2026-05-30",
+      "start": null,
+      "estimate": 15,
+      "logged": 0,
+      "description": "",
+      "subtasks": [],
+      "comments": [],
+      "activity": [],
+      "recurring": "monthly",
+      "createdAt": "2026-05-06T16:00:00.000Z"
+    },
+    {
+      "id": "t-6",
+      "title": "PDP template — variant selector",
+      "status": "progress",
+      "priority": "p1",
+      "client": "c-atelier",
+      "tags": [
+        "t-dev"
+      ],
+      "assignees": [
+        "u-me"
+      ],
+      "due": "2026-05-28",
+      "start": "2026-05-25",
+      "estimate": 360,
+      "logged": 210,
+      "description": "",
+      "subtasks": [
+        {
+          "id": "s1",
+          "title": "Sketch interaction states",
+          "done": true
+        },
+        {
+          "id": "s2",
+          "title": "Build component",
+          "done": true
+        },
+        {
+          "id": "s3",
+          "title": "Hook up to product API",
+          "done": false
+        },
+        {
+          "id": "s4",
+          "title": "QA mobile",
+          "done": false
+        }
+      ],
+      "comments": [],
+      "activity": [],
+      "recurring": null,
+      "createdAt": "2026-05-06T16:00:00.000Z"
+    },
+    {
+      "id": "t-7",
+      "title": "Cart drawer animation polish",
+      "status": "progress",
+      "priority": "p2",
+      "client": "c-atelier",
+      "tags": [
+        "t-dev",
+        "t-design"
+      ],
+      "assignees": [
+        "u-me"
+      ],
+      "due": "2026-05-31",
+      "start": "2026-05-26",
+      "estimate": 150,
+      "logged": 60,
+      "description": "",
+      "subtasks": [],
+      "comments": [],
+      "activity": [],
+      "recurring": null,
+      "createdAt": "2026-05-06T16:00:00.000Z"
+    },
+    {
+      "id": "t-8",
+      "title": "Migrate legacy collection pages",
+      "status": "todo",
+      "priority": "p3",
+      "client": "c-atelier",
+      "tags": [
+        "t-dev"
+      ],
+      "assignees": [
+        "u-me"
+      ],
+      "due": "2026-06-08",
+      "start": null,
+      "estimate": 480,
+      "logged": 0,
+      "description": "",
+      "subtasks": [],
+      "comments": [],
+      "activity": [],
+      "recurring": null,
+      "createdAt": "2026-05-06T16:00:00.000Z"
+    },
+    {
+      "id": "t-9",
+      "title": "Weekly sync — Wed 11am",
+      "status": "todo",
+      "priority": "p3",
+      "client": "c-atelier",
+      "tags": [
+        "t-meeting"
+      ],
+      "assignees": [
+        "u-me"
+      ],
+      "due": "2026-05-29",
+      "start": null,
+      "estimate": 45,
+      "logged": 0,
+      "description": "",
+      "subtasks": [],
+      "comments": [],
+      "activity": [],
+      "recurring": "weekly",
+      "createdAt": "2026-05-06T16:00:00.000Z"
+    },
+    {
+      "id": "t-10",
+      "title": "Atelier — May invoice",
+      "status": "done",
+      "priority": "p2",
+      "client": "c-atelier",
+      "tags": [
+        "t-billing",
+        "t-admin"
+      ],
+      "assignees": [
+        "u-me"
+      ],
+      "due": "2026-05-25",
+      "start": null,
+      "estimate": 15,
+      "logged": 12,
+      "description": "",
+      "subtasks": [],
+      "comments": [],
+      "activity": [],
+      "recurring": null,
+      "createdAt": "2026-05-06T16:00:00.000Z"
+    },
+    {
+      "id": "t-11",
+      "title": "Patient portal — appointment flow",
+      "status": "progress",
+      "priority": "p1",
+      "client": "c-halcyon",
+      "tags": [
+        "t-design",
+        "t-deep"
+      ],
+      "assignees": [
+        "u-me"
+      ],
+      "due": "2026-06-01",
+      "start": "2026-05-23",
+      "estimate": 720,
+      "logged": 360,
+      "description": "Redesign the multi-step booking flow. Reduce drop-off at insurance step.",
+      "subtasks": [
+        {
+          "id": "s1",
+          "title": "Audit current funnel data",
+          "done": true
+        },
+        {
+          "id": "s2",
+          "title": "Sketch alt flows",
+          "done": true
+        },
+        {
+          "id": "s3",
+          "title": "Hi-fi insurance step",
+          "done": false
+        },
+        {
+          "id": "s4",
+          "title": "Prototype review with Halcyon",
+          "done": false
+        },
+        {
+          "id": "s5",
+          "title": "Hand-off doc",
+          "done": false
+        }
+      ],
+      "comments": [],
+      "activity": [],
+      "recurring": null,
+      "createdAt": "2026-05-06T16:00:00.000Z"
+    },
+    {
+      "id": "t-12",
+      "title": "Accessibility audit — provider dashboard",
+      "status": "review",
+      "priority": "p2",
+      "client": "c-halcyon",
+      "tags": [
+        "t-design",
+        "t-research"
+      ],
+      "assignees": [
+        "u-me"
+      ],
+      "due": "2026-05-26",
+      "start": "2026-05-21",
+      "estimate": 300,
+      "logged": 285,
+      "description": "",
+      "subtasks": [],
+      "comments": [],
+      "activity": [],
+      "recurring": null,
+      "createdAt": "2026-05-06T16:00:00.000Z"
+    },
+    {
+      "id": "t-13",
+      "title": "User interviews — 5 patients",
+      "status": "blocked",
+      "priority": "p2",
+      "client": "c-halcyon",
+      "tags": [
+        "t-research"
+      ],
+      "assignees": [
+        "u-me"
+      ],
+      "due": "2026-06-02",
+      "start": null,
+      "estimate": 480,
+      "logged": 0,
+      "description": "Blocked on IRB approval — chasing weekly.",
+      "subtasks": [],
+      "comments": [],
+      "activity": [],
+      "recurring": null,
+      "createdAt": "2026-05-06T16:00:00.000Z"
+    },
+    {
+      "id": "t-14",
+      "title": "Empty states pass — dashboard widgets",
+      "status": "todo",
+      "priority": "p3",
+      "client": "c-halcyon",
+      "tags": [
+        "t-design"
+      ],
+      "assignees": [
+        "u-me"
+      ],
+      "due": "2026-06-06",
+      "start": null,
+      "estimate": 240,
+      "logged": 0,
+      "description": "",
+      "subtasks": [],
+      "comments": [],
+      "activity": [],
+      "recurring": null,
+      "createdAt": "2026-05-06T16:00:00.000Z"
+    },
+    {
+      "id": "t-15",
+      "title": "Halcyon retainer — May",
+      "status": "todo",
+      "priority": "p2",
+      "client": "c-halcyon",
+      "tags": [
+        "t-billing",
+        "t-admin"
+      ],
+      "assignees": [
+        "u-me"
+      ],
+      "due": "2026-05-30",
+      "start": null,
+      "estimate": 15,
+      "logged": 0,
+      "description": "",
+      "subtasks": [],
+      "comments": [],
+      "activity": [],
+      "recurring": "monthly",
+      "createdAt": "2026-05-06T16:00:00.000Z"
+    },
+    {
+      "id": "t-16",
+      "title": "Compliance training (HIPAA refresher)",
+      "status": "todo",
+      "priority": "p3",
+      "client": "c-halcyon",
+      "tags": [
+        "t-admin"
+      ],
+      "assignees": [
+        "u-me"
+      ],
+      "due": "2026-06-11",
+      "start": null,
+      "estimate": 60,
+      "logged": 0,
+      "description": "",
+      "subtasks": [],
+      "comments": [],
+      "activity": [],
+      "recurring": null,
+      "createdAt": "2026-05-06T16:00:00.000Z"
+    },
+    {
+      "id": "t-17",
+      "title": "Investor deck — narrative arc v3",
+      "status": "progress",
+      "priority": "p1",
+      "client": "c-brunel",
+      "tags": [
+        "t-content",
+        "t-deep"
+      ],
+      "assignees": [
+        "u-me"
+      ],
+      "due": "2026-05-28",
+      "start": "2026-05-25",
+      "estimate": 420,
+      "logged": 180,
+      "description": "",
+      "subtasks": [],
+      "comments": [],
+      "activity": [],
+      "recurring": null,
+      "createdAt": "2026-05-06T16:00:00.000Z"
+    },
+    {
+      "id": "t-18",
+      "title": "Market sizing slide — data refresh",
+      "status": "todo",
+      "priority": "p2",
+      "client": "c-brunel",
+      "tags": [
+        "t-research",
+        "t-content"
+      ],
+      "assignees": [
+        "u-me"
+      ],
+      "due": "2026-05-29",
+      "start": null,
+      "estimate": 180,
+      "logged": 0,
+      "description": "",
+      "subtasks": [],
+      "comments": [],
+      "activity": [],
+      "recurring": null,
+      "createdAt": "2026-05-06T16:00:00.000Z"
+    },
+    {
+      "id": "t-19",
+      "title": "Deck design pass",
+      "status": "todo",
+      "priority": "p2",
+      "client": "c-brunel",
+      "tags": [
+        "t-design"
+      ],
+      "assignees": [
+        "u-me"
+      ],
+      "due": "2026-05-31",
+      "start": null,
+      "estimate": 360,
+      "logged": 0,
+      "description": "",
+      "subtasks": [],
+      "comments": [],
+      "activity": [],
+      "recurring": null,
+      "createdAt": "2026-05-06T16:00:00.000Z"
+    },
+    {
+      "id": "t-20",
+      "title": "Brunel — quarterly call",
+      "status": "todo",
+      "priority": "p2",
+      "client": "c-brunel",
+      "tags": [
+        "t-meeting"
+      ],
+      "assignees": [
+        "u-me"
+      ],
+      "due": "2026-06-03",
+      "start": null,
+      "estimate": 60,
+      "logged": 0,
+      "description": "",
+      "subtasks": [],
+      "comments": [],
+      "activity": [],
+      "recurring": null,
+      "createdAt": "2026-05-06T16:00:00.000Z"
+    },
+    {
+      "id": "t-21",
+      "title": "Packaging dieline — granola pouch",
+      "status": "review",
+      "priority": "p2",
+      "client": "c-saffron",
+      "tags": [
+        "t-design"
+      ],
+      "assignees": [
+        "u-me"
+      ],
+      "due": "2026-05-25",
+      "start": "2026-05-20",
+      "estimate": 240,
+      "logged": 220,
+      "description": "",
+      "subtasks": [],
+      "comments": [],
+      "activity": [],
+      "recurring": null,
+      "createdAt": "2026-05-06T16:00:00.000Z"
+    },
+    {
+      "id": "t-22",
+      "title": "Color match w/ printer (Pantone)",
+      "status": "progress",
+      "priority": "p1",
+      "client": "c-saffron",
+      "tags": [
+        "t-design",
+        "t-urgent"
+      ],
+      "assignees": [
+        "u-me"
+      ],
+      "due": "2026-05-28",
+      "start": "2026-05-26",
+      "estimate": 90,
+      "logged": 45,
+      "description": "",
+      "subtasks": [],
+      "comments": [],
+      "activity": [],
+      "recurring": null,
+      "createdAt": "2026-05-06T16:00:00.000Z"
+    },
+    {
+      "id": "t-23",
+      "title": "Retail launch checklist",
+      "status": "todo",
+      "priority": "p3",
+      "client": "c-saffron",
+      "tags": [
+        "t-content",
+        "t-admin"
+      ],
+      "assignees": [
+        "u-me"
+      ],
+      "due": "2026-06-16",
+      "start": null,
+      "estimate": 180,
+      "logged": 0,
+      "description": "",
+      "subtasks": [],
+      "comments": [],
+      "activity": [],
+      "recurring": null,
+      "createdAt": "2026-05-06T16:00:00.000Z"
+    },
+    {
+      "id": "t-24",
+      "title": "Saffron — May invoice",
+      "status": "done",
+      "priority": "p2",
+      "client": "c-saffron",
+      "tags": [
+        "t-billing"
+      ],
+      "assignees": [
+        "u-me"
+      ],
+      "due": "2026-05-24",
+      "start": null,
+      "estimate": 15,
+      "logged": 10,
+      "description": "",
+      "subtasks": [],
+      "comments": [],
+      "activity": [],
+      "recurring": null,
+      "createdAt": "2026-05-06T16:00:00.000Z"
+    },
+    {
+      "id": "t-25",
+      "title": "Portfolio site — project page template",
+      "status": "progress",
+      "priority": "p3",
+      "client": "c-verdant",
+      "tags": [
+        "t-dev",
+        "t-design"
+      ],
+      "assignees": [
+        "u-me"
+      ],
+      "due": "2026-06-04",
+      "start": "2026-05-24",
+      "estimate": 360,
+      "logged": 120,
+      "description": "",
+      "subtasks": [],
+      "comments": [],
+      "activity": [],
+      "recurring": null,
+      "createdAt": "2026-05-06T16:00:00.000Z"
+    },
+    {
+      "id": "t-26",
+      "title": "Image optimization pipeline",
+      "status": "todo",
+      "priority": "p3",
+      "client": "c-verdant",
+      "tags": [
+        "t-dev"
+      ],
+      "assignees": [
+        "u-me"
+      ],
+      "due": "2026-06-07",
+      "start": null,
+      "estimate": 120,
+      "logged": 0,
+      "description": "",
+      "subtasks": [],
+      "comments": [],
+      "activity": [],
+      "recurring": null,
+      "createdAt": "2026-05-06T16:00:00.000Z"
+    },
+    {
+      "id": "t-27",
+      "title": "Verdant — onboarding call",
+      "status": "done",
+      "priority": "p3",
+      "client": "c-verdant",
+      "tags": [
+        "t-meeting"
+      ],
+      "assignees": [
+        "u-me"
+      ],
+      "due": "2026-05-22",
+      "start": null,
+      "estimate": 45,
+      "logged": 50,
+      "description": "",
+      "subtasks": [],
+      "comments": [],
+      "activity": [],
+      "recurring": null,
+      "createdAt": "2026-05-06T16:00:00.000Z"
+    },
+    {
+      "id": "t-28",
+      "title": "Menu typography exploration",
+      "status": "progress",
+      "priority": "p2",
+      "client": "c-kiln",
+      "tags": [
+        "t-design",
+        "t-deep"
+      ],
+      "assignees": [
+        "u-me"
+      ],
+      "due": "2026-05-30",
+      "start": "2026-05-25",
+      "estimate": 240,
+      "logged": 90,
+      "description": "",
+      "subtasks": [],
+      "comments": [],
+      "activity": [],
+      "recurring": null,
+      "createdAt": "2026-05-06T16:00:00.000Z"
+    },
+    {
+      "id": "t-29",
+      "title": "Wordmark v4 — 3 directions",
+      "status": "review",
+      "priority": "p1",
+      "client": "c-kiln",
+      "tags": [
+        "t-design"
+      ],
+      "assignees": [
+        "u-me"
+      ],
+      "due": "2026-05-27",
+      "start": "2026-05-22",
+      "estimate": 360,
+      "logged": 340,
+      "description": "",
+      "subtasks": [],
+      "comments": [],
+      "activity": [],
+      "recurring": null,
+      "createdAt": "2026-05-06T16:00:00.000Z"
+    },
+    {
+      "id": "t-30",
+      "title": "Photography brief",
+      "status": "todo",
+      "priority": "p3",
+      "client": "c-kiln",
+      "tags": [
+        "t-content"
+      ],
+      "assignees": [
+        "u-me"
+      ],
+      "due": "2026-06-02",
+      "start": null,
+      "estimate": 90,
+      "logged": 0,
+      "description": "",
+      "subtasks": [],
+      "comments": [],
+      "activity": [],
+      "recurring": null,
+      "createdAt": "2026-05-06T16:00:00.000Z"
+    },
+    {
+      "id": "t-31",
+      "title": "Signage system — sketch round",
+      "status": "todo",
+      "priority": "p2",
+      "client": "c-kiln",
+      "tags": [
+        "t-design"
+      ],
+      "assignees": [
+        "u-me"
+      ],
+      "due": "2026-06-10",
+      "start": null,
+      "estimate": 300,
+      "logged": 0,
+      "description": "",
+      "subtasks": [],
+      "comments": [],
+      "activity": [],
+      "recurring": null,
+      "createdAt": "2026-05-06T16:00:00.000Z"
+    },
+    {
+      "id": "t-32",
+      "title": "Pelagic case study — interview notes",
+      "status": "progress",
+      "priority": "p3",
+      "client": "c-pelagic",
+      "tags": [
+        "t-content",
+        "t-research"
+      ],
+      "assignees": [
+        "u-me"
+      ],
+      "due": "2026-06-01",
+      "start": "2026-05-26",
+      "estimate": 240,
+      "logged": 90,
+      "description": "",
+      "subtasks": [],
+      "comments": [],
+      "activity": [],
+      "recurring": null,
+      "createdAt": "2026-05-06T16:00:00.000Z"
+    },
+    {
+      "id": "t-33",
+      "title": "Case study draft v1",
+      "status": "todo",
+      "priority": "p2",
+      "client": "c-pelagic",
+      "tags": [
+        "t-content",
+        "t-deep"
+      ],
+      "assignees": [
+        "u-me"
+      ],
+      "due": "2026-06-05",
+      "start": null,
+      "estimate": 360,
+      "logged": 0,
+      "description": "",
+      "subtasks": [],
+      "comments": [],
+      "activity": [],
+      "recurring": null,
+      "createdAt": "2026-05-06T16:00:00.000Z"
+    },
+    {
+      "id": "t-34",
+      "title": "File Q2 estimated taxes",
+      "status": "todo",
+      "priority": "p1",
+      "client": null,
+      "tags": [
+        "t-admin",
+        "t-urgent"
+      ],
+      "assignees": [
+        "u-me"
+      ],
+      "due": "2026-05-29",
+      "start": null,
+      "estimate": 90,
+      "logged": 0,
+      "description": "",
+      "subtasks": [],
+      "comments": [],
+      "activity": [],
+      "recurring": null,
+      "createdAt": "2026-05-06T16:00:00.000Z"
+    },
+    {
+      "id": "t-35",
+      "title": "Book Q3 co-working desk",
+      "status": "todo",
+      "priority": "p3",
+      "client": null,
+      "tags": [
+        "t-admin"
+      ],
+      "assignees": [
+        "u-me"
+      ],
+      "due": "2026-06-10",
+      "start": null,
+      "estimate": 30,
+      "logged": 0,
+      "description": "",
+      "subtasks": [],
+      "comments": [],
+      "activity": [],
+      "recurring": null,
+      "createdAt": "2026-05-06T16:00:00.000Z"
+    },
+    {
+      "id": "t-36",
+      "title": "Update portfolio — 2026 work",
+      "status": "todo",
+      "priority": "p3",
+      "client": null,
+      "tags": [
+        "t-content",
+        "t-design"
+      ],
+      "assignees": [
+        "u-me"
+      ],
+      "due": "2026-06-24",
+      "start": null,
+      "estimate": 480,
+      "logged": 0,
+      "description": "",
+      "subtasks": [],
+      "comments": [],
+      "activity": [],
+      "recurring": null,
+      "createdAt": "2026-05-06T16:00:00.000Z"
+    },
+    {
+      "id": "t-37",
+      "title": "Quarterly review (self)",
+      "status": "todo",
+      "priority": "p3",
+      "client": null,
+      "tags": [
+        "t-deep"
+      ],
+      "assignees": [
+        "u-me"
+      ],
+      "due": "2026-06-06",
+      "start": null,
+      "estimate": 120,
+      "logged": 0,
+      "description": "",
+      "subtasks": [],
+      "comments": [],
+      "activity": [],
+      "recurring": "quarterly",
+      "createdAt": "2026-05-06T16:00:00.000Z"
+    }
+  ],
+  "timeEntries": [
+    {
+      "id": "e-1",
+      "task": "t-1",
+      "client": "c-northwind",
+      "duration": 95,
+      "date": "2026-05-27",
+      "note": "Brand guide motion section"
+    },
+    {
+      "id": "e-2",
+      "task": "t-1",
+      "client": "c-northwind",
+      "duration": 60,
+      "date": "2026-05-26",
+      "note": "Review revisions"
+    },
+    {
+      "id": "e-3",
+      "task": "t-2",
+      "client": "c-northwind",
+      "duration": 75,
+      "date": "2026-05-27",
+      "note": "Hero direction sketches"
+    },
+    {
+      "id": "e-4",
+      "task": "t-6",
+      "client": "c-atelier",
+      "duration": 120,
+      "date": "2026-05-27",
+      "note": "PDP variant selector"
+    },
+    {
+      "id": "e-5",
+      "task": "t-6",
+      "client": "c-atelier",
+      "duration": 90,
+      "date": "2026-05-25",
+      "note": "Build component"
+    },
+    {
+      "id": "e-6",
+      "task": "t-7",
+      "client": "c-atelier",
+      "duration": 60,
+      "date": "2026-05-26",
+      "note": "Cart drawer easing"
+    },
+    {
+      "id": "e-7",
+      "task": "t-11",
+      "client": "c-halcyon",
+      "duration": 180,
+      "date": "2026-05-26",
+      "note": "Insurance step hi-fi"
+    },
+    {
+      "id": "e-8",
+      "task": "t-11",
+      "client": "c-halcyon",
+      "duration": 180,
+      "date": "2026-05-24",
+      "note": "Sketch alt flows"
+    },
+    {
+      "id": "e-9",
+      "task": "t-12",
+      "client": "c-halcyon",
+      "duration": 75,
+      "date": "2026-05-25",
+      "note": "A11y audit findings"
+    },
+    {
+      "id": "e-10",
+      "task": "t-17",
+      "client": "c-brunel",
+      "duration": 120,
+      "date": "2026-05-27",
+      "note": "Narrative arc revisions"
+    },
+    {
+      "id": "e-11",
+      "task": "t-17",
+      "client": "c-brunel",
+      "duration": 60,
+      "date": "2026-05-25",
+      "note": "Outline v3"
+    },
+    {
+      "id": "e-12",
+      "task": "t-21",
+      "client": "c-saffron",
+      "duration": 45,
+      "date": "2026-05-26",
+      "note": "Printer call + match"
+    },
+    {
+      "id": "e-13",
+      "task": "t-25",
+      "client": "c-verdant",
+      "duration": 60,
+      "date": "2026-05-24",
+      "note": "Template work"
+    },
+    {
+      "id": "e-14",
+      "task": "t-29",
+      "client": "c-kiln",
+      "duration": 90,
+      "date": "2026-05-26",
+      "note": "Type pairings"
+    },
+    {
+      "id": "e-15",
+      "task": "t-30",
+      "client": "c-kiln",
+      "duration": 60,
+      "date": "2026-05-24",
+      "note": "Wordmark direction B"
+    }
+  ],
+  "inbox": [
+    {
+      "id": "n1",
+      "kind": "mention",
+      "who": "u-jm",
+      "task": "t-1",
+      "text": "mentioned you in Brand guidelines v2",
+      "at": "2026-05-27T16:00:00.000Z",
+      "read": false
+    },
+    {
+      "id": "n2",
+      "kind": "assigned",
+      "who": "u-li",
+      "task": "t-12",
+      "text": "assigned an A11y audit follow-up to you",
+      "at": "2026-05-27T16:00:00.000Z",
+      "read": false
+    },
+    {
+      "id": "n3",
+      "kind": "due",
+      "who": null,
+      "task": "t-11",
+      "text": "Patient portal — appointment flow is due in 5 days",
+      "at": "2026-05-27T16:00:00.000Z",
+      "read": false
+    },
+    {
+      "id": "n4",
+      "kind": "comment",
+      "who": "u-rk",
+      "task": "t-20",
+      "text": "Pantone 7621 C is close but the cream pulls warm — see swatch",
+      "at": "2026-05-26T16:00:00.000Z",
+      "read": false
+    },
+    {
+      "id": "n5",
+      "kind": "status",
+      "who": "u-jm",
+      "task": "t-30",
+      "text": "moved Wordmark v4 to In Review",
+      "at": "2026-05-26T16:00:00.000Z",
+      "read": true
+    },
+    {
+      "id": "n6",
+      "kind": "due",
+      "who": null,
+      "task": "t-32",
+      "text": "File Q2 estimated taxes — due in 2 days",
+      "at": "2026-05-26T16:00:00.000Z",
+      "read": false
+    },
+    {
+      "id": "n7",
+      "kind": "comment",
+      "who": "u-li",
+      "task": "t-11",
+      "text": "Stakeholder loved the new step order. Greenlight on visuals.",
+      "at": "2026-05-25T16:00:00.000Z",
+      "read": true
+    }
+  ]
+}
